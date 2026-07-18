@@ -50,6 +50,10 @@ coverage/
 playwright-report/
 test-results/
 
+# Supabase local state
+supabase/.branches/
+supabase/.temp/
+
 # Others
 ~$*
 *~

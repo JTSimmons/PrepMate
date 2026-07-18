@@ -36,11 +36,13 @@ npm run dev
 
 1. Create a Supabase project.
 2. In Authentication settings, enable email/password sign-in.
-3. Apply the SQL migration in `supabase/migrations/202607180001_initial_schema.sql`.
+3. Connect the Supabase project to this GitHub repository, `JTSimmons/PrepMate`.
+4. Apply the SQL migration in `supabase/migrations/202607180001_initial_schema.sql`.
 
 Using the Supabase CLI:
 
 ```bash
+supabase login
 supabase link --project-ref your-project-ref
 supabase db push
 ```
@@ -48,6 +50,26 @@ supabase db push
 Or paste the migration into the Supabase SQL editor and run it once.
 
 The migration creates household, meal, ingredient, meal-plan, shopping-list, and shopping-list-item tables. Row Level Security is enabled for every user-accessible table. Policies restrict normal browser CRUD operations to households where `auth.uid()` is a member. A `create_household_for_current_user` RPC creates the first household and membership for a new user.
+
+The Supabase project structure is committed under `supabase/`:
+
+```text
+supabase/
+  config.toml
+  migrations/
+  functions/
+  seed.sql
+  tests/
+```
+
+Keep generated local state such as `supabase/.temp/` out of Git. Do not commit Supabase access tokens, database passwords, or service-role keys.
+
+Recommended Auth URL settings:
+
+- Site URL: `https://jtsimmons.github.io/PrepMate/`
+- Additional redirect URLs:
+  - `http://localhost:5173/**`
+  - `https://jtsimmons.github.io/PrepMate/**`
 
 ## Development Commands
 
