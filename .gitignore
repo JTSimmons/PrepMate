@@ -38,6 +38,17 @@ ScaffoldingReadMe.txt
 
 # dotenv environment variables file
 .env
+.env.local
+
+# Node / Vite
+node_modules/
+dist/
+.vite/
+
+# Test output
+coverage/
+playwright-report/
+test-results/
 
 # Others
 ~$*
