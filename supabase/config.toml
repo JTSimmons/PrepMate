@@ -69,7 +69,7 @@ max_indexes = 5
 
 [auth]
 enabled = true
-site_url = "http://localhost:5173"
+site_url = "https://jtsimmons.github.io/PrepMate/"
 additional_redirect_urls = [
   "http://localhost:5173/**",
   "https://jtsimmons.github.io/PrepMate/**"
