@@ -1,0 +1,3 @@
+-- Optional local seed data for `supabase db reset`.
+-- PrepMate creates a household for each signed-in user through
+-- public.create_household_for_current_user(), so there is no static seed data yet.
