@@ -104,3 +104,37 @@ export type ShoppingListItem = {
   is_removed: boolean;
   notes: string | null;
 };
+
+export type KrogerMatchStatus = 'pending' | 'approved' | 'skipped' | 'added' | 'failed';
+
+export type ShoppingListKrogerMatch = {
+  id: string;
+  shopping_list_item_id: string;
+  kroger_product_upc: string | null;
+  product_name: string | null;
+  brand: string | null;
+  size: string | null;
+  image_url: string | null;
+  price: number | null;
+  package_quantity: number;
+  allow_substitutes: boolean;
+  special_instructions: string | null;
+  status: KrogerMatchStatus;
+  last_error: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type KrogerProduct = {
+  upc: string;
+  description: string;
+  brand: string | null;
+  size: string | null;
+  imageUrl: string | null;
+  price: number | null;
+};
+
+export type KrogerPreviewItem = ShoppingListItem & {
+  shopping_list_kroger_matches?: ShoppingListKrogerMatch[];
+};

@@ -12,8 +12,27 @@ import {
   updateShoppingListItem,
 } from './lib/database';
 import { aggregateGroceryItems } from './lib/grocery';
+import {
+  fetchKrogerPreview,
+  saveKrogerMatch,
+  searchKrogerProducts,
+  startKrogerAuth,
+  submitKrogerCart,
+  updateKrogerMatch,
+} from './lib/kroger';
+import { activeKrogerMatch, cartSearchTerm, isApprovedForKroger, krogerStatusLabel } from './lib/krogerCart';
 import { isSupabaseConfigured, supabase } from './lib/supabase';
-import type { Household, IngredientRowInput, Meal, MealFormValues, SelectedMeal, ShoppingList, ShoppingListItem } from './lib/types';
+import type {
+  Household,
+  IngredientRowInput,
+  KrogerPreviewItem,
+  KrogerProduct,
+  Meal,
+  MealFormValues,
+  SelectedMeal,
+  ShoppingList,
+  ShoppingListItem,
+} from './lib/types';
 
 const emptyIngredient = (): IngredientRowInput => ({
   name: '',
@@ -612,6 +631,7 @@ function GroceryPage({ householdId }: { householdId: string }) {
             <input placeholder="Notes" value={manual.notes} onChange={(event) => setManual({ ...manual, notes: event.target.value })} />
             <button className="primary">Add</button>
           </form>
+          <KrogerCartPanel shoppingListId={list.id} />
           {visibleItems.length === 0 ? (
             <section className="empty-state">All items are removed. Add manual items if needed.</section>
           ) : (
@@ -638,6 +658,225 @@ function GroceryPage({ householdId }: { householdId: string }) {
         </>
       )}
     </main>
+  );
+}
+
+function KrogerCartPanel({ shoppingListId }: { shoppingListId: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const [connected, setConnected] = useState(false);
+  const [includeChecked, setIncludeChecked] = useState(false);
+  const [items, setItems] = useState<KrogerPreviewItem[]>([]);
+  const [locationId, setLocationId] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const [searchingItemId, setSearchingItemId] = useState<string | null>(null);
+  const [productsByItem, setProductsByItem] = useState<Record<string, KrogerProduct[]>>({});
+
+  const approvedCount = items.filter((item) => isApprovedForKroger(activeKrogerMatch(item))).length;
+
+  const loadPreview = useCallback(async () => {
+    setLoading(true);
+    setMessage('');
+    try {
+      const preview = await fetchKrogerPreview(shoppingListId, includeChecked);
+      setConnected(preview.connected);
+      setItems(preview.items);
+      setLocationId(preview.preferredLocationId ?? '');
+    } catch (caught) {
+      setMessage((caught as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }, [includeChecked, shoppingListId]);
+
+  useEffect(() => {
+    if (!expanded) {
+      return;
+    }
+    void loadPreview();
+  }, [expanded, loadPreview]);
+
+  async function connectKroger() {
+    setMessage('');
+    try {
+      const authorizationUrl = await startKrogerAuth();
+      window.open(authorizationUrl, '_blank', 'noopener,noreferrer');
+      setMessage('Finish Kroger authorization in the new tab, then refresh this review.');
+    } catch (caught) {
+      setMessage((caught as Error).message);
+    }
+  }
+
+  async function searchItem(item: KrogerPreviewItem) {
+    setSearchingItemId(item.id);
+    setMessage('');
+    try {
+      const result = await searchKrogerProducts(cartSearchTerm(item), locationId || null);
+      setConnected(result.connected);
+      setProductsByItem((current) => ({ ...current, [item.id]: result.products }));
+      if (result.products.length === 0) {
+        setMessage(`No Kroger products found for ${item.display_name}.`);
+      }
+    } catch (caught) {
+      setMessage((caught as Error).message);
+    } finally {
+      setSearchingItemId(null);
+    }
+  }
+
+  async function chooseProduct(item: KrogerPreviewItem, product: KrogerProduct) {
+    const match = await saveKrogerMatch(item.id, product, {
+      package_quantity: activeKrogerMatch(item)?.package_quantity ?? 1,
+      allow_substitutes: activeKrogerMatch(item)?.allow_substitutes ?? true,
+    });
+    setItems((current) => current.map((currentItem) => (currentItem.id === item.id ? { ...currentItem, shopping_list_kroger_matches: [match] } : currentItem)));
+  }
+
+  async function patchMatch(item: KrogerPreviewItem, patch: Parameters<typeof updateKrogerMatch>[1]) {
+    const match = activeKrogerMatch(item);
+    if (!match) {
+      return;
+    }
+    const saved = await updateKrogerMatch(match.id, patch);
+    setItems((current) => current.map((currentItem) => (currentItem.id === item.id ? { ...currentItem, shopping_list_kroger_matches: [saved] } : currentItem)));
+  }
+
+  async function skipItem(item: KrogerPreviewItem) {
+    const match = await saveKrogerMatch(item.id, null, { status: 'skipped', package_quantity: 1, allow_substitutes: true });
+    setItems((current) => current.map((currentItem) => (currentItem.id === item.id ? { ...currentItem, shopping_list_kroger_matches: [match] } : currentItem)));
+  }
+
+  async function submitApproved() {
+    setLoading(true);
+    setMessage('');
+    try {
+      const result = await submitKrogerCart(shoppingListId, includeChecked);
+      setMessage(`Added ${result.added} approved item${result.added === 1 ? '' : 's'} to Kroger.`);
+      await loadPreview();
+    } catch (caught) {
+      setMessage((caught as Error).message);
+      await loadPreview();
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="card kroger-panel">
+      <div className="panel-heading">
+        <div>
+          <h3>Kroger cart</h3>
+          <p>Review product matches before adding this saved grocery list to Kroger.</p>
+        </div>
+        <button type="button" onClick={() => setExpanded((current) => !current)}>
+          {expanded ? 'Hide' : 'Review'}
+        </button>
+      </div>
+      {expanded && (
+        <div className="form-stack">
+          <div className="row-actions">
+            <button type="button" onClick={connectKroger}>
+              {connected ? 'Reconnect Kroger' : 'Connect Kroger'}
+            </button>
+            <button type="button" onClick={loadPreview} disabled={loading}>
+              {loading ? 'Refreshing...' : 'Refresh review'}
+            </button>
+            <button type="button" className="primary" onClick={submitApproved} disabled={!connected || approvedCount === 0 || loading}>
+              Add approved ({approvedCount})
+            </button>
+          </div>
+          <label className="check-label">
+            <input type="checkbox" checked={includeChecked} onChange={(event) => setIncludeChecked(event.target.checked)} />
+            Include checked grocery items
+          </label>
+          <label>
+            Kroger location ID
+            <input value={locationId} onChange={(event) => setLocationId(event.target.value)} placeholder="Optional, improves product availability and prices" />
+          </label>
+          {message && <p className="message">{message}</p>}
+          {!connected && <p className="message">Connect Kroger before searching products or adding items to cart.</p>}
+          {items.length === 0 ? (
+            <section className="empty-state">No eligible grocery items to send to Kroger.</section>
+          ) : (
+            <div className="kroger-review-list">
+              {items.map((item) => {
+                const match = activeKrogerMatch(item);
+                const products = productsByItem[item.id] ?? [];
+                return (
+                  <article className="kroger-review-item" key={item.id}>
+                    <div>
+                      <strong>{item.display_name}</strong>
+                      <p>{[item.quantity, item.unit].filter(Boolean).join(' ')} {item.notes ? `· ${item.notes}` : ''}</p>
+                      <span className={`status-pill status-${match?.status ?? 'pending'}`}>{krogerStatusLabel(match)}</span>
+                      {match?.last_error && <p className="message error">{match.last_error}</p>}
+                    </div>
+                    {match?.product_name && (
+                      <div className="selected-product">
+                        {match.image_url && <img src={match.image_url} alt="" />}
+                        <div>
+                          <strong>{match.product_name}</strong>
+                          <p>{[match.brand, match.size, match.price ? `$${match.price.toFixed(2)}` : null].filter(Boolean).join(' · ')}</p>
+                        </div>
+                      </div>
+                    )}
+                    <div className="kroger-controls">
+                      <button type="button" onClick={() => searchItem(item)} disabled={!connected || searchingItemId === item.id}>
+                        {searchingItemId === item.id ? 'Searching...' : 'Search Kroger'}
+                      </button>
+                      <button type="button" onClick={() => skipItem(item)}>
+                        Skip
+                      </button>
+                      {match && (
+                        <>
+                          <label>
+                            Packages
+                            <input
+                              type="number"
+                              min="1"
+                              value={match.package_quantity}
+                              onChange={(event) => patchMatch(item, { package_quantity: Number(event.target.value) })}
+                            />
+                          </label>
+                          <label className="check-label">
+                            <input
+                              type="checkbox"
+                              checked={match.allow_substitutes}
+                              onChange={(event) => patchMatch(item, { allow_substitutes: event.target.checked })}
+                            />
+                            Allow substitutes
+                          </label>
+                          <label className="wide-field">
+                            Instructions
+                            <input
+                              value={match.special_instructions ?? ''}
+                              onChange={(event) => patchMatch(item, { special_instructions: event.target.value })}
+                              placeholder="Optional cart note"
+                            />
+                          </label>
+                        </>
+                      )}
+                    </div>
+                    {products.length > 0 && (
+                      <div className="product-results">
+                        {products.map((product) => (
+                          <button type="button" className="product-choice" key={product.upc} onClick={() => chooseProduct(item, product)}>
+                            {product.imageUrl && <img src={product.imageUrl} alt="" />}
+                            <span>
+                              <strong>{product.description}</strong>
+                              <small>{[product.brand, product.size, product.price ? `$${product.price.toFixed(2)}` : null].filter(Boolean).join(' · ')}</small>
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+    </section>
   );
 }
 

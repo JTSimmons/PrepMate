@@ -162,6 +162,9 @@ policy = "per_worker"
 inspector_port = 8083
 deno_version = 2
 
+[functions.kroger-auth-callback]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327

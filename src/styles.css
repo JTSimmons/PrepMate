@@ -167,6 +167,18 @@ nav a.active {
   margin-bottom: 1rem;
 }
 
+.panel-heading {
+  align-items: start;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.panel-heading h3,
+.panel-heading p {
+  margin-bottom: 0.2rem;
+}
+
 .page-heading h2 {
   margin-bottom: 0.15rem;
 }
@@ -307,6 +319,94 @@ nav a.active {
   gap: 0.75rem;
 }
 
+.kroger-panel {
+  margin: 1rem 0;
+}
+
+.kroger-review-list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.kroger-review-item {
+  border-top: 1px solid #edf1ea;
+  display: grid;
+  gap: 0.75rem;
+  padding-top: 0.85rem;
+}
+
+.kroger-review-item p {
+  color: #59665d;
+  margin-bottom: 0.25rem;
+}
+
+.status-pill {
+  background: #edf1ea;
+  border-radius: 999px;
+  color: #304036;
+  display: inline-flex;
+  font-size: 0.78rem;
+  font-weight: 750;
+  padding: 0.15rem 0.55rem;
+}
+
+.status-approved,
+.status-added {
+  background: #e0f2e8;
+  color: #216b4e;
+}
+
+.status-failed {
+  background: #fff1ef;
+  color: #923d37;
+}
+
+.status-skipped {
+  background: #f0ede7;
+  color: #6b5b44;
+}
+
+.selected-product,
+.product-choice {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.selected-product img,
+.product-choice img {
+  aspect-ratio: 1;
+  border: 1px solid #dbe2d7;
+  border-radius: 8px;
+  height: 56px;
+  object-fit: cover;
+  width: 56px;
+}
+
+.kroger-controls,
+.product-results {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.wide-field {
+  grid-column: 1 / -1;
+}
+
+.product-choice {
+  min-height: 0;
+  text-align: left;
+}
+
+.product-choice span {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.product-choice small {
+  color: #59665d;
+}
+
 .shopping-item {
   border-top: 1px solid #edf1ea;
   padding-top: 0.75rem;
@@ -347,6 +447,15 @@ nav a.active {
 
   .shopping-item {
     grid-template-columns: auto 1.2fr 0.45fr 0.55fr 1fr auto;
+  }
+
+  .kroger-controls {
+    align-items: end;
+    grid-template-columns: auto auto 120px auto;
+  }
+
+  .product-results {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
