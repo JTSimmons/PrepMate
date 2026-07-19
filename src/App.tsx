@@ -577,6 +577,8 @@ function KrogerCartPanel({ shoppingListId }: { shoppingListId: string }) {
   return <KrogerCartPanelReview shoppingListId={shoppingListId} />;
 }
 
+const KROGER_CART_URL = 'https://www.kroger.com/cart';
+
 function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [connected, setConnected] = useState(false);
@@ -705,8 +707,16 @@ function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
     setMessage('');
     try {
       const result = await submitKrogerCart(shoppingListId);
-      setMessage(`Added ${result.added} approved item${result.added === 1 ? '' : 's'} to Kroger.`);
       await loadPreview();
+      const opened = window.open(KROGER_CART_URL, '_blank');
+      if (opened) {
+        opened.opener = null;
+      }
+      setMessage(
+        opened
+          ? `Added ${result.added} approved item${result.added === 1 ? '' : 's'} to Kroger.`
+          : `Added ${result.added} approved item${result.added === 1 ? '' : 's'} to Kroger. Open ${KROGER_CART_URL} to review your cart.`,
+      );
     } catch (caught) {
       setMessage((caught as Error).message);
       await loadPreview();
