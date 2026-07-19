@@ -579,6 +579,7 @@ function KrogerCartPanel({ shoppingListId }: { shoppingListId: string }) {
 
 function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
   const [expanded, setExpanded] = useState(true);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [connected, setConnected] = useState(false);
   const [items, setItems] = useState<KrogerPreviewItem[]>([]);
   const [locationId, setLocationId] = useState('');
@@ -790,44 +791,59 @@ function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
       {expanded && (
         <div className="form-stack">
           <div className="row-actions">
-            <button type="button" onClick={connectKroger}>
-              {connected ? 'Reconnect Kroger' : 'Connect Kroger'}
-            </button>
-            <button type="button" onClick={loadPreview} disabled={loading}>
-              {loading ? 'Refreshing...' : 'Refresh review'}
-            </button>
             <button type="button" className="primary" onClick={submitApproved} disabled={!connected || approvedCount === 0 || loading}>
               Add approved ({approvedCount})
             </button>
+            <button
+              type="button"
+              className="icon-button"
+              aria-label="Kroger settings"
+              title="Kroger settings"
+              onClick={() => setSettingsOpen((current) => !current)}
+            >
+              Settings
+            </button>
           </div>
-          <div className="store-picker">
-            <div>
-              <strong>Kroger store</strong>
-              <p>{locationId ? [locationName, locationId].filter(Boolean).join(' - ') : 'Select a store to show Kroger prices.'}</p>
-            </div>
-            <form className="store-search" onSubmit={searchStores}>
-              <input
-                inputMode="numeric"
-                maxLength={5}
-                placeholder="ZIP code"
-                value={zipCode}
-                onChange={(event) => setZipCode(event.target.value.replace(/\D/g, '').slice(0, 5))}
-              />
-              <button type="submit" disabled={!connected || searchingLocations}>
-                {searchingLocations ? 'Searching...' : 'Find store'}
-              </button>
-            </form>
-            {locations.length > 0 && (
-              <div className="store-results">
-                {locations.map((location) => (
-                  <button type="button" key={location.locationId} onClick={() => chooseLocation(location)}>
-                    <strong>{location.name}</strong>
-                    <small>{location.address || location.locationId}</small>
-                  </button>
-                ))}
+          {settingsOpen && (
+            <div className="kroger-settings">
+              <div className="row-actions">
+                <button type="button" onClick={connectKroger}>
+                  {connected ? 'Reconnect Kroger' : 'Connect Kroger'}
+                </button>
+                <button type="button" onClick={loadPreview} disabled={loading}>
+                  {loading ? 'Refreshing...' : 'Refresh review'}
+                </button>
               </div>
-            )}
-          </div>
+              <div className="store-picker">
+                <div>
+                  <strong>Kroger store</strong>
+                  <p>{locationId ? [locationName, locationId].filter(Boolean).join(' - ') : 'Select a store to show Kroger prices.'}</p>
+                </div>
+                <form className="store-search" onSubmit={searchStores}>
+                  <input
+                    inputMode="numeric"
+                    maxLength={5}
+                    placeholder="ZIP code"
+                    value={zipCode}
+                    onChange={(event) => setZipCode(event.target.value.replace(/\D/g, '').slice(0, 5))}
+                  />
+                  <button type="submit" disabled={!connected || searchingLocations}>
+                    {searchingLocations ? 'Searching...' : 'Find store'}
+                  </button>
+                </form>
+                {locations.length > 0 && (
+                  <div className="store-results">
+                    {locations.map((location) => (
+                      <button type="button" key={location.locationId} onClick={() => chooseLocation(location)}>
+                        <strong>{location.name}</strong>
+                        <small>{location.address || location.locationId}</small>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
           {message && <p className="message">{message}</p>}
           {!connected && <p className="message">Connect Kroger before searching products or adding items to cart.</p>}
           {items.length === 0 ? (

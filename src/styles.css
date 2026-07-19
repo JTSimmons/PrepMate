@@ -53,6 +53,15 @@ button.danger {
   color: #923d37;
 }
 
+.icon-button {
+  align-items: center;
+  display: inline-flex;
+  font-size: 0.9rem;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 0.75rem;
+}
+
 input,
 textarea {
   width: 100%;
@@ -325,6 +334,13 @@ nav a.active {
 
 .add-cart-item-form {
   border-top: 1px solid #edf1ea;
+  padding-top: 0.85rem;
+}
+
+.kroger-settings {
+  border-top: 1px solid #edf1ea;
+  display: grid;
+  gap: 0.75rem;
   padding-top: 0.85rem;
 }
 
