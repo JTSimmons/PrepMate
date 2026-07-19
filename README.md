@@ -37,7 +37,7 @@ npm run dev
 1. Create a Supabase project.
 2. In Authentication settings, enable email/password sign-in.
 3. Connect the Supabase project to this GitHub repository, `JTSimmons/PrepMate`.
-4. Apply the SQL migration in `supabase/migrations/202607180001_initial_schema.sql`.
+4. Apply the SQL migrations in `supabase/migrations/`.
 
 Using the Supabase CLI:
 
@@ -71,6 +71,37 @@ Recommended Auth URL settings:
   - `http://localhost:5173/**`
   - `https://jtsimmons.github.io/PrepMate/**`
 
+## Kroger Integration Setup
+
+PrepMate sends grocery lists to Kroger through Supabase Edge Functions. The browser never receives Kroger OAuth tokens, the Kroger client secret, or the Supabase service-role key.
+
+1. Create a Kroger developer app with an OAuth redirect URI:
+
+```text
+https://your-project-ref.supabase.co/functions/v1/kroger-auth-callback
+```
+
+2. Store Kroger credentials as Supabase Edge Function secrets:
+
+```bash
+supabase secrets set KROGER_CLIENT_ID=your-kroger-client-id
+supabase secrets set KROGER_CLIENT_SECRET=your-kroger-client-secret
+supabase secrets set KROGER_REDIRECT_URI=https://your-project-ref.supabase.co/functions/v1/kroger-auth-callback
+supabase secrets set KROGER_DEFAULT_LOCATION_ID=optional-store-location-id
+```
+
+3. Deploy the Edge Functions:
+
+```bash
+supabase functions deploy kroger-auth-start
+supabase functions deploy kroger-auth-callback --no-verify-jwt
+supabase functions deploy kroger-cart-preview
+supabase functions deploy kroger-product-search
+supabase functions deploy kroger-cart-submit
+```
+
+The Kroger review flow uses the saved `shopping_list_items` snapshot. Removed items are never exported, checked items are excluded by default, and users must approve a Kroger product match before it can be added to cart. Recipe quantities are not converted to package counts automatically; the user confirms package count during review.
+
 ## Development Commands
 
 ```bash
@@ -81,7 +112,7 @@ npm run test:e2e
 npm run build
 ```
 
-Vitest covers grocery-list aggregation and meal form validation/save behavior. Playwright covers the static setup state and runs against the Vite app.
+Vitest covers grocery-list aggregation, Kroger cart eligibility helpers, and meal form validation/save behavior. Playwright covers the static setup state and runs against the Vite app.
 
 ## Grocery List Behavior
 
@@ -100,4 +131,4 @@ In repository settings, set GitHub Pages source to GitHub Actions.
 
 ## Current Limitations
 
-Kroger integration, recipe scraping/importing, pantry inventory, AI recommendations, push notifications, native apps, and a separate backend service are intentionally out of scope for this MVP.
+Recipe scraping/importing, pantry inventory, AI recommendations, push notifications, native apps, and a separate backend service are intentionally out of scope. Kroger integration requires a configured Kroger developer app and deployed Supabase Edge Functions before the cart flow can complete against the live Kroger API.
