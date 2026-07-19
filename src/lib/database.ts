@@ -124,7 +124,7 @@ export async function saveMeal(householdId: string, values: MealFormValues, meal
     rows.push({
       meal_id: savedMealId,
       ingredient_id: await findOrCreateIngredient(householdId, ingredient),
-      quantity: null,
+      quantity: ingredient.quantity,
       unit: null,
       preparation_note: ingredient.preparation_note.trim() || null,
       is_optional: ingredient.is_optional,
@@ -235,7 +235,7 @@ export async function addManualShoppingListItem(shoppingListId: string, item: Pa
     shopping_list_id: shoppingListId,
     ingredient_id: null,
     display_name: item.display_name,
-    quantity: null,
+    quantity: item.quantity ?? null,
     unit: null,
     category: item.category || null,
     source: 'manual',

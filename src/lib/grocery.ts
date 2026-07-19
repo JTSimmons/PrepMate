@@ -4,6 +4,15 @@ export function normalizeIngredientName(name: string) {
   return name.trim().toLocaleLowerCase();
 }
 
+function scaledQuantity(quantity: number | null, mealServings: number, selectedServings: number | null, count: number) {
+  if (quantity === null) {
+    return null;
+  }
+
+  const servingMultiplier = selectedServings && mealServings > 0 ? selectedServings / mealServings : 1;
+  return quantity * servingMultiplier * count;
+}
+
 export function aggregateGroceryItems(selectedMeals: SelectedMeal[]): AggregatedGroceryItem[] {
   const items = new Map<string, AggregatedGroceryItem>();
 
@@ -16,11 +25,13 @@ export function aggregateGroceryItems(selectedMeals: SelectedMeal[]): Aggregated
 
       const normalizedName = row.ingredients.normalized_name || normalizeIngredientName(row.ingredients.name);
       const key = normalizedName;
+      const quantity = scaledQuantity(row.quantity, selected.meal.default_servings, selected.servings, selected.quantity);
       const note = row.preparation_note?.trim() || null;
       const existing = items.get(key);
 
       if (existing) {
-        existing.sources.push({ mealId: selected.meal.id, mealName: selected.meal.name, quantity: null });
+        existing.quantity = existing.quantity === null || quantity === null ? null : existing.quantity + quantity;
+        existing.sources.push({ mealId: selected.meal.id, mealName: selected.meal.name, quantity });
         if (note && !existing.notes?.includes(note)) {
           existing.notes = existing.notes ? `${existing.notes}; ${note}` : note;
         }
@@ -31,14 +42,14 @@ export function aggregateGroceryItems(selectedMeals: SelectedMeal[]): Aggregated
         ingredient_id: row.ingredient_id,
         display_name: row.ingredients.name.trim(),
         normalized_name: normalizedName,
-        quantity: null,
+        quantity,
         unit: null,
         category: null,
         notes: note,
         source: 'meal',
         is_checked: false,
         is_removed: false,
-        sources: [{ mealId: selected.meal.id, mealName: selected.meal.name, quantity: null }],
+        sources: [{ mealId: selected.meal.id, mealName: selected.meal.name, quantity }],
       });
     }
   }

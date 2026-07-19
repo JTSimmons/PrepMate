@@ -47,7 +47,7 @@ describe('aggregateGroceryItems', () => {
     ]);
 
     expect(items).toHaveLength(1);
-    expect(items[0]).toMatchObject({ display_name: 'Black Beans', quantity: null, unit: null, category: null });
+    expect(items[0]).toMatchObject({ display_name: 'Black Beans', quantity: 3, unit: null, category: null });
     expect(items[0].sources.map((source) => source.mealName)).toEqual(['Burritos', 'Soup']);
   });
 
@@ -58,16 +58,16 @@ describe('aggregateGroceryItems', () => {
     ]);
 
     expect(items).toHaveLength(1);
-    expect(items[0]).toMatchObject({ display_name: 'Rice', quantity: null, unit: null });
+    expect(items[0]).toMatchObject({ display_name: 'Rice', quantity: 2, unit: null });
   });
 
-  it('preserves meal sources without calculating quantities', () => {
+  it('scales quantities by meal count and serving multiplier', () => {
     const items = aggregateGroceryItems([
       selectedMeal('Tacos', [ingredient({ quantity: 2, unit: 'tbsp' })], { quantity: 2, servings: 8 }),
     ]);
 
-    expect(items[0].quantity).toBeNull();
-    expect(items[0].sources[0]).toMatchObject({ mealName: 'Tacos', quantity: null });
+    expect(items[0].quantity).toBe(8);
+    expect(items[0].sources[0]).toMatchObject({ mealName: 'Tacos', quantity: 8 });
   });
 
   it('skips optional ingredients and preserves null quantities', () => {

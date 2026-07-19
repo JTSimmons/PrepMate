@@ -35,6 +35,7 @@ import type {
 
 const emptyIngredient = (): IngredientRowInput => ({
   name: '',
+  quantity: null,
   preparation_note: '',
   is_optional: false,
 });
@@ -60,6 +61,7 @@ function mealToForm(meal: Meal): MealFormValues {
         id: row.id,
         ingredient_id: row.ingredient_id,
         name: row.ingredients?.name ?? '',
+        quantity: row.quantity,
         preparation_note: row.preparation_note ?? '',
         is_optional: row.is_optional,
       })) ?? [emptyIngredient()],
@@ -376,6 +378,14 @@ export function MealForm({
         <div className="ingredient-row" key={ingredient.id ?? index}>
           <input aria-label="Ingredient name" placeholder="Ingredient" value={ingredient.name} onChange={(event) => updateIngredient(index, { name: event.target.value })} />
           <input
+            aria-label="Quantity"
+            placeholder="Qty"
+            type="number"
+            step="0.01"
+            value={ingredient.quantity ?? ''}
+            onChange={(event) => updateIngredient(index, { quantity: event.target.value ? Number(event.target.value) : null })}
+          />
+          <input
             aria-label="Preparation note"
             placeholder="Prep note"
             value={ingredient.preparation_note}
@@ -517,6 +527,7 @@ function PlanPage({ householdId, meals }: { householdId: string; meals: Meal[] }
                 {preview.map((item) => (
                   <li key={item.normalized_name}>
                     <span>{item.display_name}</span>
+                    <span>{item.quantity ?? ''}</span>
                   </li>
                 ))}
               </ul>
@@ -594,7 +605,7 @@ function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
   const [locationId, setLocationId] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
-  const [manual, setManual] = useState({ display_name: '', notes: '' });
+  const [manual, setManual] = useState({ display_name: '', quantity: '', notes: '' });
   const [searchingItemId, setSearchingItemId] = useState<string | null>(null);
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
   const [productsByItem, setProductsByItem] = useState<Record<string, KrogerProduct[]>>({});
@@ -653,9 +664,13 @@ function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
     }
   }
 
+  function defaultPackageQuantity(quantity: number | null) {
+    return Math.max(1, Math.ceil(quantity ?? 1));
+  }
+
   async function chooseProduct(item: KrogerPreviewItem, product: KrogerProduct) {
     const match = await saveKrogerMatch(item.id, product, {
-      package_quantity: activeKrogerMatch(item)?.package_quantity ?? 1,
+      package_quantity: activeKrogerMatch(item)?.package_quantity ?? defaultPackageQuantity(item.quantity),
       allow_substitutes: activeKrogerMatch(item)?.allow_substitutes ?? true,
     });
     setItems((current) => current.map((currentItem) => (currentItem.id === item.id ? { ...currentItem, shopping_list_kroger_matches: [match] } : currentItem)));
@@ -728,9 +743,10 @@ function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
     try {
       await addManualShoppingListItem(shoppingListId, {
         display_name: manual.display_name.trim(),
+        quantity: manual.quantity ? Number(manual.quantity) : null,
         notes: manual.notes.trim(),
       });
-      setManual({ display_name: '', notes: '' });
+      setManual({ display_name: '', quantity: '', notes: '' });
       await loadPreview();
     } catch (caught) {
       setMessage((caught as Error).message);
@@ -793,7 +809,9 @@ function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
                       <button type="button" className="summary-toggle" onClick={() => toggleExpandedItem(item.id)}>
                         <span>
                           <strong>{item.display_name}</strong>
-                          {item.notes && <small>{item.notes}</small>}
+                          {(item.quantity !== null || item.notes) && (
+                            <small>{[item.quantity !== null ? String(item.quantity) : '', item.notes ?? ''].filter(Boolean).join(' - ')}</small>
+                          )}
                         </span>
                         <span className={`status-pill status-${match?.status ?? 'pending'}`}>{krogerStatusLabel(match)}</span>
                       </button>
@@ -878,6 +896,7 @@ function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
           )}
           <form className="manual-form add-cart-item-form" onSubmit={addManual}>
             <input placeholder="Add item" value={manual.display_name} onChange={(event) => setManual({ ...manual, display_name: event.target.value })} />
+            <input placeholder="Qty" type="number" step="0.01" value={manual.quantity} onChange={(event) => setManual({ ...manual, quantity: event.target.value })} />
             <input placeholder="Notes" value={manual.notes} onChange={(event) => setManual({ ...manual, notes: event.target.value })} />
             <button className="primary" disabled={loading}>{loading ? 'Adding...' : 'Add item'}</button>
           </form>

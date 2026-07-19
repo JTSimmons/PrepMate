@@ -10,7 +10,7 @@ const initialValues: MealFormValues = {
   recipe_url: '',
   notes: '',
   default_servings: 4,
-  ingredients: [{ name: '', preparation_note: '', is_optional: false }],
+  ingredients: [{ name: '', quantity: null, preparation_note: '', is_optional: false }],
 };
 
 describe('MealForm', () => {
@@ -30,15 +30,17 @@ describe('MealForm', () => {
 
     await userEvent.type(screen.getByLabelText('Meal name'), 'Chicken bowls');
     await userEvent.type(screen.getByLabelText('Ingredient name'), 'Chicken');
+    await userEvent.type(screen.getByLabelText('Quantity'), '2');
     await userEvent.click(screen.getByRole('button', { name: /add ingredient/i }));
     await userEvent.type(screen.getAllByLabelText('Ingredient name')[1], 'Rice');
+    await userEvent.type(screen.getAllByLabelText('Quantity')[1], '1');
     await userEvent.click(screen.getByRole('button', { name: /save meal/i }));
 
     expect(onSave).toHaveBeenCalledWith(expect.objectContaining({
       name: 'Chicken bowls',
       ingredients: expect.arrayContaining([
-        expect.objectContaining({ name: 'Chicken' }),
-        expect.objectContaining({ name: 'Rice' }),
+        expect.objectContaining({ name: 'Chicken', quantity: 2 }),
+        expect.objectContaining({ name: 'Rice', quantity: 1 }),
       ]),
     }));
   });
