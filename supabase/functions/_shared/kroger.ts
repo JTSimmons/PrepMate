@@ -40,7 +40,7 @@ export function krogerAuthBaseUrl() {
 }
 
 export function krogerScopes() {
-  return Deno.env.get('KROGER_SCOPES') ?? 'profile.compact product.compact cart.basic:write';
+  return Deno.env.get('KROGER_SCOPES') ?? 'product.compact cart.basic:write';
 }
 
 function basicAuthHeader() {
