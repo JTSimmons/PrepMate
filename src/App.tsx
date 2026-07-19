@@ -674,6 +674,10 @@ function initialGroceryMessage() {
 }
 
 function KrogerCartPanel({ shoppingListId }: { shoppingListId: string }) {
+  return <KrogerCartPanelReview shoppingListId={shoppingListId} />;
+}
+
+function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
   const [expanded, setExpanded] = useState(false);
   const [connected, setConnected] = useState(false);
   const [includeChecked, setIncludeChecked] = useState(false);
@@ -682,11 +686,11 @@ function KrogerCartPanel({ shoppingListId }: { shoppingListId: string }) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [searchingItemId, setSearchingItemId] = useState<string | null>(null);
+  const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
   const [productsByItem, setProductsByItem] = useState<Record<string, KrogerProduct[]>>({});
 
   const approvedCount = items.filter((item) => isApprovedForKroger(activeKrogerMatch(item))).length;
   const pendingItems = items.filter((item) => !isKrogerReviewComplete(activeKrogerMatch(item)));
-  const reviewedItems = items.filter((item) => isKrogerReviewComplete(activeKrogerMatch(item)));
   const activeItem = pendingItems[0] ?? null;
 
   const loadPreview = useCallback(async () => {
@@ -697,6 +701,7 @@ function KrogerCartPanel({ shoppingListId }: { shoppingListId: string }) {
       setConnected(preview.connected);
       setItems(preview.items);
       setLocationId(preview.preferredLocationId ?? '');
+      setExpandedItemId((current) => current ?? preview.items.find((item) => !isKrogerReviewComplete(activeKrogerMatch(item)))?.id ?? preview.items[0]?.id ?? null);
     } catch (caught) {
       setMessage((caught as Error).message);
     } finally {
@@ -749,6 +754,7 @@ function KrogerCartPanel({ shoppingListId }: { shoppingListId: string }) {
       delete next[item.id];
       return next;
     });
+    advanceExpandedItem(item.id);
   }
 
   async function patchMatch(item: KrogerPreviewItem, patch: Parameters<typeof updateKrogerMatch>[1]) {
@@ -768,6 +774,12 @@ function KrogerCartPanel({ shoppingListId }: { shoppingListId: string }) {
       delete next[item.id];
       return next;
     });
+    advanceExpandedItem(item.id);
+  }
+
+  function advanceExpandedItem(completedItemId: string) {
+    const nextItem = items.find((candidate) => candidate.id !== completedItemId && !isKrogerReviewComplete(activeKrogerMatch(candidate)));
+    setExpandedItemId(nextItem?.id ?? completedItemId);
   }
 
   async function submitApproved() {
@@ -821,20 +833,25 @@ function KrogerCartPanel({ shoppingListId }: { shoppingListId: string }) {
           {!connected && <p className="message">Connect Kroger before searching products or adding items to cart.</p>}
           {items.length === 0 ? (
             <section className="empty-state">No eligible grocery items to send to Kroger.</section>
-          ) : !activeItem ? (
-            <section className="empty-state">All Kroger items are reviewed. Add approved items when ready.</section>
           ) : (
             <div className="kroger-review-list">
-              {[activeItem].map((item) => {
+              {items.map((item) => {
                 const match = activeKrogerMatch(item);
                 const products = productsByItem[item.id] ?? [];
+                const isExpanded = expandedItemId === item.id;
+                const isActive = activeItem?.id === item.id;
+                const isAdded = match?.status === 'added';
                 return (
-                  <article className="kroger-review-item" key={item.id}>
-                    <div>
-                      <strong>{item.display_name}</strong>
-                      <p>{[item.quantity, item.unit].filter(Boolean).join(' ')} {item.notes ? `· ${item.notes}` : ''}</p>
-                      <p>{pendingItems.length} item{pendingItems.length === 1 ? '' : 's'} left to review</p>
-                      <span className={`status-pill status-${match?.status ?? 'pending'}`}>{krogerStatusLabel(match)}</span>
+                  <article className={`kroger-review-item ${isActive ? 'active-review-item' : ''}`} key={item.id}>
+                    <div className="kroger-item-summary">
+                      <button type="button" className="summary-toggle" onClick={() => setExpandedItemId((current) => (current === item.id ? null : item.id))}>
+                        <span>
+                          <strong>{item.display_name}</strong>
+                          <small>{[item.quantity, item.unit].filter(Boolean).join(' ')} {item.notes ? `- ${item.notes}` : ''}</small>
+                        </span>
+                        <span className={`status-pill status-${match?.status ?? 'pending'}`}>{krogerStatusLabel(match)}</span>
+                      </button>
+                      {isActive && <p>{pendingItems.length} item{pendingItems.length === 1 ? '' : 's'} left to review</p>}
                       {match?.last_error && <p className="message error">{match.last_error}</p>}
                     </div>
                     {match?.product_name && (
@@ -846,9 +863,11 @@ function KrogerCartPanel({ shoppingListId }: { shoppingListId: string }) {
                         </div>
                       </div>
                     )}
+                    {isExpanded && !isAdded && (
+                      <>
                     <div className="kroger-controls">
                       <button type="button" onClick={() => searchItem(item)} disabled={!connected || searchingItemId === item.id}>
-                        {searchingItemId === item.id ? 'Searching...' : 'Search Kroger'}
+                        {searchingItemId === item.id ? 'Searching...' : match?.product_name ? 'Search different product' : 'Search Kroger'}
                       </button>
                       <button type="button" onClick={() => skipItem(item)}>
                         Skip
@@ -896,26 +915,15 @@ function KrogerCartPanel({ shoppingListId }: { shoppingListId: string }) {
                         ))}
                       </div>
                     )}
+                      </>
+                    )}
+                    {isExpanded && isAdded && (
+                      <p className="message">This item has already been added to Kroger. Generate a new grocery-list snapshot to send changes.</p>
+                    )}
                   </article>
                 );
               })}
             </div>
-          )}
-          {reviewedItems.length > 0 && (
-            <details className="reviewed-summary">
-              <summary>Reviewed items ({reviewedItems.length})</summary>
-              <ul className="list">
-                {reviewedItems.map((item) => {
-                  const match = activeKrogerMatch(item);
-                  return (
-                    <li key={item.id}>
-                      <span>{item.display_name}</span>
-                      <span>{krogerStatusLabel(match)}</span>
-                    </li>
-                  );
-                })}
-              </ul>
-            </details>
           )}
         </div>
       )}
