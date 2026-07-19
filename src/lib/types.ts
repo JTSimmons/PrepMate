@@ -46,10 +46,8 @@ export type MealIngredient = {
 
 export type MealFormValues = {
   name: string;
-  description: string;
   recipe_url: string;
   notes: string;
-  default_servings: number;
   ingredients: IngredientRowInput[];
 };
 

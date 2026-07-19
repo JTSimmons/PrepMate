@@ -6,10 +6,8 @@ import type { MealFormValues } from './lib/types';
 
 const initialValues: MealFormValues = {
   name: '',
-  description: '',
   recipe_url: '',
   notes: '',
-  default_servings: 4,
   ingredients: [{ name: '', quantity: null, preparation_note: '', is_optional: false }],
 };
 

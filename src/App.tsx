@@ -42,20 +42,16 @@ const emptyIngredient = (): IngredientRowInput => ({
 
 const emptyMealForm: MealFormValues = {
   name: '',
-  description: '',
   recipe_url: '',
   notes: '',
-  default_servings: 4,
   ingredients: [emptyIngredient()],
 };
 
 function mealToForm(meal: Meal): MealFormValues {
   return {
     name: meal.name,
-    description: meal.description ?? '',
     recipe_url: meal.recipe_url ?? '',
     notes: meal.notes ?? '',
-    default_servings: meal.default_servings,
     ingredients:
       meal.meal_ingredients?.map((row) => ({
         id: row.id,
@@ -273,9 +269,8 @@ function MealsPage({ householdId, meals, refreshMeals }: { householdId: string; 
             <article className="card meal-card" key={meal.id}>
               <div>
                 <h3>{meal.name}</h3>
-                <p>{meal.description || 'No description'}</p>
               </div>
-              <p>{meal.meal_ingredients?.length ?? 0} ingredients · {meal.default_servings} servings</p>
+              <p>{meal.meal_ingredients?.length ?? 0} ingredients</p>
               {meal.recipe_url && (
                 <a href={meal.recipe_url} target="_blank" rel="noreferrer noopener">
                   Open recipe
@@ -325,10 +320,6 @@ export function MealForm({
       setError('Meal name is required.');
       return;
     }
-    if (values.default_servings <= 0) {
-      setError('Default servings must be greater than zero.');
-      return;
-    }
     if (validIngredients.length === 0) {
       setError('Add at least one ingredient.');
       return;
@@ -351,20 +342,7 @@ export function MealForm({
           Meal name
           <input value={values.name} onChange={(event) => setValues({ ...values, name: event.target.value })} />
         </label>
-        <label>
-          Default servings
-          <input
-            type="number"
-            min="1"
-            value={values.default_servings}
-            onChange={(event) => setValues({ ...values, default_servings: Number(event.target.value) })}
-          />
-        </label>
       </div>
-      <label>
-        Description
-        <input value={values.description} onChange={(event) => setValues({ ...values, description: event.target.value })} />
-      </label>
       <label>
         Recipe URL
         <input type="url" value={values.recipe_url} onChange={(event) => setValues({ ...values, recipe_url: event.target.value })} />
@@ -417,7 +395,7 @@ export function MealForm({
 }
 
 function PlanPage({ householdId, meals }: { householdId: string; meals: Meal[] }) {
-  const [selected, setSelected] = useState<Record<string, { quantity: number; servings: number | null }>>({});
+  const [selected, setSelected] = useState<Record<string, { quantity: number }>>({});
   const [message, setMessage] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -428,7 +406,7 @@ function PlanPage({ householdId, meals }: { householdId: string; meals: Meal[] }
         .map((meal) => ({
           meal,
           quantity: selected[meal.id].quantity,
-          servings: selected[meal.id].servings,
+          servings: null,
         })),
     [meals, selected],
   );
@@ -480,7 +458,7 @@ function PlanPage({ householdId, meals }: { householdId: string; meals: Meal[] }
                         setSelected((current) => {
                           const copy = { ...current };
                           if (event.target.checked) {
-                            copy[meal.id] = { quantity: 1, servings: meal.default_servings };
+                            copy[meal.id] = { quantity: 1 };
                           } else {
                             delete copy[meal.id];
                           }
@@ -498,18 +476,7 @@ function PlanPage({ householdId, meals }: { householdId: string; meals: Meal[] }
                           type="number"
                           min="1"
                           value={selected[meal.id].quantity}
-                          onChange={(event) => setSelected({ ...selected, [meal.id]: { ...selected[meal.id], quantity: Number(event.target.value) } })}
-                        />
-                      </label>
-                      <label>
-                        Servings
-                        <input
-                          type="number"
-                          min="1"
-                          value={selected[meal.id].servings ?? ''}
-                          onChange={(event) =>
-                            setSelected({ ...selected, [meal.id]: { ...selected[meal.id], servings: event.target.value ? Number(event.target.value) : null } })
-                          }
+                          onChange={(event) => setSelected({ ...selected, [meal.id]: { quantity: Number(event.target.value) } })}
                         />
                       </label>
                     </div>

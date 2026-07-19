@@ -4,13 +4,12 @@ export function normalizeIngredientName(name: string) {
   return name.trim().toLocaleLowerCase();
 }
 
-function scaledQuantity(quantity: number | null, mealServings: number, selectedServings: number | null, count: number) {
+function scaledQuantity(quantity: number | null, count: number) {
   if (quantity === null) {
     return null;
   }
 
-  const servingMultiplier = selectedServings && mealServings > 0 ? selectedServings / mealServings : 1;
-  return quantity * servingMultiplier * count;
+  return quantity * count;
 }
 
 export function aggregateGroceryItems(selectedMeals: SelectedMeal[]): AggregatedGroceryItem[] {
@@ -25,7 +24,7 @@ export function aggregateGroceryItems(selectedMeals: SelectedMeal[]): Aggregated
 
       const normalizedName = row.ingredients.normalized_name || normalizeIngredientName(row.ingredients.name);
       const key = normalizedName;
-      const quantity = scaledQuantity(row.quantity, selected.meal.default_servings, selected.servings, selected.quantity);
+      const quantity = scaledQuantity(row.quantity, selected.quantity);
       const note = row.preparation_note?.trim() || null;
       const existing = items.get(key);
 

@@ -96,10 +96,10 @@ export async function saveMeal(householdId: string, values: MealFormValues, meal
   const mealPayload = {
     household_id: householdId,
     name: values.name.trim(),
-    description: values.description.trim() || null,
+    description: null,
     recipe_url: values.recipe_url.trim() || null,
     notes: values.notes.trim() || null,
-    default_servings: values.default_servings,
+    default_servings: 1,
   };
 
   const mealResult = mealId
@@ -161,7 +161,7 @@ export async function createShoppingListSnapshot(householdId: string, selectedMe
   const planItems = selectedMeals.map((selected) => ({
     meal_plan_id: plan.id,
     meal_id: selected.meal.id,
-    servings: selected.servings,
+    servings: null,
     quantity: selected.quantity,
   }));
   const { error: planItemsError } = await client.from('meal_plan_items').insert(planItems);
