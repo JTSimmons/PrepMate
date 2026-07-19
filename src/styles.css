@@ -274,6 +274,14 @@ nav a.active {
   gap: 0.5rem;
 }
 
+.full-width-action {
+  display: grid;
+}
+
+.full-width-action > button {
+  width: 100%;
+}
+
 .ingredient-row,
 .shopping-item {
   align-items: end;

@@ -578,7 +578,6 @@ function KrogerCartPanel({ shoppingListId }: { shoppingListId: string }) {
 }
 
 function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
-  const [expanded, setExpanded] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [connected, setConnected] = useState(false);
   const [items, setItems] = useState<KrogerPreviewItem[]>([]);
@@ -616,11 +615,8 @@ function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
   }, [shoppingListId]);
 
   useEffect(() => {
-    if (!expanded) {
-      return;
-    }
     void loadPreview();
-  }, [expanded, loadPreview]);
+  }, [loadPreview]);
 
   async function connectKroger() {
     setMessage('');
@@ -784,12 +780,8 @@ function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
           <h3>Kroger cart</h3>
           <p>Review product matches before adding this saved grocery list to Kroger.</p>
         </div>
-        <button type="button" onClick={() => setExpanded((current) => !current)}>
-          {expanded ? 'Hide' : 'Review'}
-        </button>
       </div>
-      {expanded && (
-        <div className="form-stack">
+      <div className="form-stack">
           <div className="row-actions">
             <button
               type="button"
@@ -967,7 +959,7 @@ function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
             </div>
           )}
           {items.length > 0 && (
-            <div className="row-actions">
+            <div className="full-width-action">
               <button type="button" className="primary" onClick={submitApproved} disabled={!connected || approvedCount === 0 || loading}>
                 Add approved ({approvedCount})
               </button>
@@ -980,7 +972,6 @@ function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
             <button className="primary" disabled={loading}>{loading ? 'Adding...' : 'Add item'}</button>
           </form>
         </div>
-      )}
     </section>
   );
 }
