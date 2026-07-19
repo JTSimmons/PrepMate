@@ -554,8 +554,6 @@ function GroceryPage({ householdId }: { householdId: string }) {
   const [list, setList] = useState<ShoppingList | null>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState(initialGroceryMessage);
-  const [manual, setManual] = useState({ display_name: '', quantity: '', unit: '', category: '', notes: '' });
-  const [krogerRefreshKey, setKrogerRefreshKey] = useState(0);
 
   const refresh = useCallback(async () => {
     const result = await fetchLatestShoppingList(householdId);
@@ -571,27 +569,6 @@ function GroceryPage({ householdId }: { householdId: string }) {
       .catch((caught: Error) => setMessage(caught.message))
       .finally(() => setLoading(false));
   }, [refresh]);
-
-  async function addManual(event: React.FormEvent) {
-    event.preventDefault();
-    if (!list) {
-      return;
-    }
-    if (!manual.display_name.trim()) {
-      setMessage('Manual item name is required.');
-      return;
-    }
-    await addManualShoppingListItem(list.id, {
-      display_name: manual.display_name.trim(),
-      quantity: manual.quantity ? Number(manual.quantity) : null,
-      unit: manual.unit.trim(),
-      category: manual.category.trim(),
-      notes: manual.notes.trim(),
-    });
-    setManual({ display_name: '', quantity: '', unit: '', category: '', notes: '' });
-    await refresh();
-    setKrogerRefreshKey((current) => current + 1);
-  }
 
   if (loading) {
     return <main className="center-state">Loading grocery list...</main>;
@@ -609,17 +586,7 @@ function GroceryPage({ householdId }: { householdId: string }) {
       {!list ? (
         <section className="empty-state">Generate a grocery list from the Plan tab.</section>
       ) : (
-        <>
-          <form className="card manual-form" onSubmit={addManual}>
-            <input placeholder="Add item" value={manual.display_name} onChange={(event) => setManual({ ...manual, display_name: event.target.value })} />
-            <input placeholder="Qty" type="number" step="0.01" value={manual.quantity} onChange={(event) => setManual({ ...manual, quantity: event.target.value })} />
-            <input placeholder="Unit" value={manual.unit} onChange={(event) => setManual({ ...manual, unit: event.target.value })} />
-            <input placeholder="Category" value={manual.category} onChange={(event) => setManual({ ...manual, category: event.target.value })} />
-            <input placeholder="Notes" value={manual.notes} onChange={(event) => setManual({ ...manual, notes: event.target.value })} />
-            <button className="primary">Add</button>
-          </form>
-          <KrogerCartPanel shoppingListId={list.id} refreshKey={krogerRefreshKey} />
-        </>
+        <KrogerCartPanel shoppingListId={list.id} />
       )}
     </main>
   );
@@ -637,11 +604,11 @@ function initialGroceryMessage() {
   return '';
 }
 
-function KrogerCartPanel({ shoppingListId, refreshKey }: { shoppingListId: string; refreshKey: number }) {
-  return <KrogerCartPanelReview shoppingListId={shoppingListId} refreshKey={refreshKey} />;
+function KrogerCartPanel({ shoppingListId }: { shoppingListId: string }) {
+  return <KrogerCartPanelReview shoppingListId={shoppingListId} />;
 }
 
-function KrogerCartPanelReview({ shoppingListId, refreshKey }: { shoppingListId: string; refreshKey: number }) {
+function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
   const [expanded, setExpanded] = useState(true);
   const [connected, setConnected] = useState(false);
   const [includeChecked, setIncludeChecked] = useState(true);
@@ -649,6 +616,7 @@ function KrogerCartPanelReview({ shoppingListId, refreshKey }: { shoppingListId:
   const [locationId, setLocationId] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [manual, setManual] = useState({ display_name: '', quantity: '', unit: '', notes: '' });
   const [searchingItemId, setSearchingItemId] = useState<string | null>(null);
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
   const [productsByItem, setProductsByItem] = useState<Record<string, KrogerProduct[]>>({});
@@ -678,7 +646,7 @@ function KrogerCartPanelReview({ shoppingListId, refreshKey }: { shoppingListId:
       return;
     }
     void loadPreview();
-  }, [expanded, loadPreview, refreshKey]);
+  }, [expanded, loadPreview]);
 
   async function connectKroger() {
     setMessage('');
@@ -766,6 +734,30 @@ function KrogerCartPanelReview({ shoppingListId, refreshKey }: { shoppingListId:
     } catch (caught) {
       setMessage((caught as Error).message);
       await loadPreview();
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function addManual(event: React.FormEvent) {
+    event.preventDefault();
+    if (!manual.display_name.trim()) {
+      setMessage('Item name is required.');
+      return;
+    }
+    setLoading(true);
+    setMessage('');
+    try {
+      await addManualShoppingListItem(shoppingListId, {
+        display_name: manual.display_name.trim(),
+        quantity: manual.quantity ? Number(manual.quantity) : null,
+        unit: manual.unit.trim(),
+        notes: manual.notes.trim(),
+      });
+      setManual({ display_name: '', quantity: '', unit: '', notes: '' });
+      await loadPreview();
+    } catch (caught) {
+      setMessage((caught as Error).message);
     } finally {
       setLoading(false);
     }
@@ -908,6 +900,13 @@ function KrogerCartPanelReview({ shoppingListId, refreshKey }: { shoppingListId:
               })}
             </div>
           )}
+          <form className="manual-form add-cart-item-form" onSubmit={addManual}>
+            <input placeholder="Add item" value={manual.display_name} onChange={(event) => setManual({ ...manual, display_name: event.target.value })} />
+            <input placeholder="Qty" type="number" step="0.01" value={manual.quantity} onChange={(event) => setManual({ ...manual, quantity: event.target.value })} />
+            <input placeholder="Unit" value={manual.unit} onChange={(event) => setManual({ ...manual, unit: event.target.value })} />
+            <input placeholder="Notes" value={manual.notes} onChange={(event) => setManual({ ...manual, notes: event.target.value })} />
+            <button className="primary" disabled={loading}>{loading ? 'Adding...' : 'Add item'}</button>
+          </form>
         </div>
       )}
     </section>
