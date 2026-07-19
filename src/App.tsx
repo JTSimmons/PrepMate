@@ -398,7 +398,7 @@ export function MealForm({
 }
 
 function PlanPage({ householdId, meals }: { householdId: string; meals: Meal[] }) {
-  const [selected, setSelected] = useState<Record<string, { quantity: number }>>({});
+  const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [message, setMessage] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -408,7 +408,6 @@ function PlanPage({ householdId, meals }: { householdId: string; meals: Meal[] }
         .filter((meal) => selected[meal.id])
         .map((meal) => ({
           meal,
-          quantity: selected[meal.id].quantity,
           servings: null,
         })),
     [meals, selected],
@@ -461,7 +460,7 @@ function PlanPage({ householdId, meals }: { householdId: string; meals: Meal[] }
                         setSelected((current) => {
                           const copy = { ...current };
                           if (event.target.checked) {
-                            copy[meal.id] = { quantity: 1 };
+                            copy[meal.id] = true;
                           } else {
                             delete copy[meal.id];
                           }
@@ -471,19 +470,6 @@ function PlanPage({ householdId, meals }: { householdId: string; meals: Meal[] }
                     />
                     {meal.name}
                   </label>
-                  {isSelected && (
-                    <div className="planner-controls">
-                      <label>
-                        Count
-                        <input
-                          type="number"
-                          min="1"
-                          value={selected[meal.id].quantity}
-                          onChange={(event) => setSelected({ ...selected, [meal.id]: { quantity: Number(event.target.value) } })}
-                        />
-                      </label>
-                    </div>
-                  )}
                 </div>
               );
             })}
@@ -594,7 +580,6 @@ function KrogerCartPanel({ shoppingListId }: { shoppingListId: string }) {
 function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
   const [expanded, setExpanded] = useState(true);
   const [connected, setConnected] = useState(false);
-  const [includeChecked, setIncludeChecked] = useState(true);
   const [items, setItems] = useState<KrogerPreviewItem[]>([]);
   const [locationId, setLocationId] = useState('');
   const [locationName, setLocationName] = useState<string | null>(null);
@@ -616,7 +601,7 @@ function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
     setLoading(true);
     setMessage('');
     try {
-      const preview = await fetchKrogerPreview(shoppingListId, includeChecked);
+      const preview = await fetchKrogerPreview(shoppingListId);
       setConnected(preview.connected);
       setItems(preview.items);
       setLocationId(preview.preferredLocationId ?? '');
@@ -627,7 +612,7 @@ function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
     } finally {
       setLoading(false);
     }
-  }, [includeChecked, shoppingListId]);
+  }, [shoppingListId]);
 
   useEffect(() => {
     if (!expanded) {
@@ -722,7 +707,7 @@ function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
     setLoading(true);
     setMessage('');
     try {
-      const result = await submitKrogerCart(shoppingListId, includeChecked);
+      const result = await submitKrogerCart(shoppingListId);
       setMessage(`Added ${result.added} approved item${result.added === 1 ? '' : 's'} to Kroger.`);
       await loadPreview();
     } catch (caught) {
@@ -815,10 +800,6 @@ function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
               Add approved ({approvedCount})
             </button>
           </div>
-          <label className="check-label">
-            <input type="checkbox" checked={includeChecked} onChange={(event) => setIncludeChecked(event.target.checked)} />
-            Include checked grocery items
-          </label>
           <div className="store-picker">
             <div>
               <strong>Kroger store</strong>

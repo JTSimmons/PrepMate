@@ -36,7 +36,7 @@ function selectedMeal(name: string, rows: MealIngredient[], overrides: Partial<S
     updated_at: '',
     meal_ingredients: rows,
   };
-  return { meal, quantity: 1, servings: 4, ...overrides };
+  return { meal, servings: 4, ...overrides };
 }
 
 describe('aggregateGroceryItems', () => {
@@ -61,13 +61,13 @@ describe('aggregateGroceryItems', () => {
     expect(items[0]).toMatchObject({ display_name: 'Rice', quantity: 2, unit: null });
   });
 
-  it('scales quantities by meal count', () => {
+  it('uses each selected meal once', () => {
     const items = aggregateGroceryItems([
-      selectedMeal('Tacos', [ingredient({ quantity: 2, unit: 'tbsp' })], { quantity: 2, servings: 8 }),
+      selectedMeal('Tacos', [ingredient({ quantity: 2, unit: 'tbsp' })]),
     ]);
 
-    expect(items[0].quantity).toBe(4);
-    expect(items[0].sources[0]).toMatchObject({ mealName: 'Tacos', quantity: 4 });
+    expect(items[0].quantity).toBe(2);
+    expect(items[0].sources[0]).toMatchObject({ mealName: 'Tacos', quantity: 2 });
   });
 
   it('skips optional ingredients and preserves null quantities', () => {

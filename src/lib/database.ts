@@ -162,7 +162,7 @@ export async function createShoppingListSnapshot(householdId: string, selectedMe
     meal_plan_id: plan.id,
     meal_id: selected.meal.id,
     servings: null,
-    quantity: selected.quantity,
+    quantity: 1,
   }));
   const { error: planItemsError } = await client.from('meal_plan_items').insert(planItems);
   assertNoError(planItemsError);

@@ -10,7 +10,6 @@ Deno.serve(async (request) => {
     const { supabase, user } = await requireUser(request);
     const body = await request.json();
     const shoppingListId = typeof body.shoppingListId === 'string' ? body.shoppingListId : '';
-    const includeChecked = Boolean(body.includeChecked);
     if (!shoppingListId) {
       throw new Error('shoppingListId is required.');
     }
@@ -21,16 +20,13 @@ Deno.serve(async (request) => {
       throw new Error('Connect Kroger before adding items to cart.');
     }
 
-    let matchQuery = supabase
+    const matchQuery = supabase
       .from('shopping_list_kroger_matches')
       .select('*, shopping_list_items!inner(shopping_list_id,is_removed,is_checked)')
       .eq('created_by', user.id)
       .eq('status', 'approved')
       .eq('shopping_list_items.shopping_list_id', shoppingListId)
       .eq('shopping_list_items.is_removed', false);
-    if (!includeChecked) {
-      matchQuery = matchQuery.eq('shopping_list_items.is_checked', false);
-    }
     const { data: matches, error } = await matchQuery;
     if (error) throw new Error(error.message);
 

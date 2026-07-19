@@ -116,7 +116,7 @@ Vitest covers grocery-list aggregation, Kroger cart eligibility helpers, and mea
 
 ## Grocery List Behavior
 
-Generated grocery lists are persisted snapshots in `shopping_lists` and `shopping_list_items`. They are not continuously recalculated after meal changes. Ingredients combine by normalized ingredient name, and unitless quantities are summed by meal count for the generated list. PrepMate treats saved meals as family meals; the shopper chooses the exact Kroger package, then the summed quantity is used as the default package count.
+Generated grocery lists are persisted snapshots in `shopping_lists` and `shopping_list_items`. They are not continuously recalculated after meal changes. Ingredients combine by normalized ingredient name across the selected family meals. PrepMate assumes each selected meal appears once; the shopper chooses the exact Kroger package, then the summed quantity is used as the default package count.
 
 ## GitHub Pages Deployment
 

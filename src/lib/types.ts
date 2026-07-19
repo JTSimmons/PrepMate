@@ -53,7 +53,6 @@ export type MealFormValues = {
 
 export type SelectedMeal = {
   meal: Meal;
-  quantity: number;
   servings: number | null;
 };
 

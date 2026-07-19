@@ -4,12 +4,12 @@ export function normalizeIngredientName(name: string) {
   return name.trim().toLocaleLowerCase();
 }
 
-function scaledQuantity(quantity: number | null, count: number) {
+function scaledQuantity(quantity: number | null) {
   if (quantity === null) {
     return null;
   }
 
-  return quantity * count;
+  return quantity;
 }
 
 export function aggregateGroceryItems(selectedMeals: SelectedMeal[]): AggregatedGroceryItem[] {
@@ -24,7 +24,7 @@ export function aggregateGroceryItems(selectedMeals: SelectedMeal[]): Aggregated
 
       const normalizedName = row.ingredients.normalized_name || normalizeIngredientName(row.ingredients.name);
       const key = normalizedName;
-      const quantity = scaledQuantity(row.quantity, selected.quantity);
+      const quantity = scaledQuantity(row.quantity);
       const note = row.preparation_note?.trim() || null;
       const existing = items.get(key);
 

@@ -10,22 +10,18 @@ Deno.serve(async (request) => {
     const { supabase, user } = await requireUser(request);
     const body = await request.json();
     const shoppingListId = typeof body.shoppingListId === 'string' ? body.shoppingListId : '';
-    const includeChecked = Boolean(body.includeChecked);
     if (!shoppingListId) {
       throw new Error('shoppingListId is required.');
     }
     await requireShoppingListAccess(supabase, user.id, shoppingListId);
 
     const connection = await getFreshKrogerConnection(supabase, user.id);
-    let itemQuery = supabase
+    const itemQuery = supabase
       .from('shopping_list_items')
       .select('*')
       .eq('shopping_list_id', shoppingListId)
       .eq('is_removed', false)
       .order('display_name', { ascending: true });
-    if (!includeChecked) {
-      itemQuery = itemQuery.eq('is_checked', false);
-    }
 
     const { data: items, error } = await itemQuery;
     if (error) throw new Error(error.message);

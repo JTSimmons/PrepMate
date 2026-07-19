@@ -22,14 +22,14 @@ export async function startKrogerAuth() {
   return assertInvoke(data, error).authorizationUrl;
 }
 
-export async function fetchKrogerPreview(shoppingListId: string, includeChecked: boolean) {
+export async function fetchKrogerPreview(shoppingListId: string) {
   const { data, error } = await requireSupabase().functions.invoke<{
     connected: boolean;
     preferredLocationId: string | null;
     preferredLocationName: string | null;
     items: KrogerPreviewItem[];
   }>('kroger-cart-preview', {
-    body: { shoppingListId, includeChecked },
+    body: { shoppingListId },
   });
   return assertInvoke(data, error);
 }
@@ -93,9 +93,9 @@ export async function updateKrogerMatch(matchId: string, patch: Partial<Shopping
   return data as ShoppingListKrogerMatch;
 }
 
-export async function submitKrogerCart(shoppingListId: string, includeChecked: boolean) {
+export async function submitKrogerCart(shoppingListId: string) {
   const { data, error } = await requireSupabase().functions.invoke<{ added: number; failed: number }>('kroger-cart-submit', {
-    body: { shoppingListId, includeChecked },
+    body: { shoppingListId },
   });
   return assertInvoke(data, error);
 }

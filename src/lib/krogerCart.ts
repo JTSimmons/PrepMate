@@ -1,10 +1,6 @@
-import type { KrogerPreviewItem, ShoppingListItem, ShoppingListKrogerMatch } from './types';
+import type { KrogerPreviewItem, ShoppingListKrogerMatch } from './types';
 
-export function isKrogerEligibleItem(item: Pick<ShoppingListItem, 'is_removed' | 'is_checked'>, includeChecked = false) {
-  return !item.is_removed && (includeChecked || !item.is_checked);
-}
-
-export function cartSearchTerm(item: Pick<ShoppingListItem, 'display_name'>) {
+export function cartSearchTerm(item: Pick<KrogerPreviewItem, 'display_name'>) {
   return item.display_name.trim();
 }
 

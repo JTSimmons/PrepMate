@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { activeKrogerMatch, cartSearchTerm, isApprovedForKroger, isKrogerEligibleItem, isKrogerReviewComplete, krogerStatusLabel } from './krogerCart';
+import { activeKrogerMatch, cartSearchTerm, isApprovedForKroger, isKrogerReviewComplete, krogerStatusLabel } from './krogerCart';
 import type { KrogerPreviewItem, ShoppingListKrogerMatch } from './types';
 
 const baseMatch: ShoppingListKrogerMatch = {
@@ -25,13 +25,6 @@ const baseMatch: ShoppingListKrogerMatch = {
 };
 
 describe('Kroger cart helpers', () => {
-  it('excludes removed and checked items by default', () => {
-    expect(isKrogerEligibleItem({ is_removed: true, is_checked: false })).toBe(false);
-    expect(isKrogerEligibleItem({ is_removed: false, is_checked: true })).toBe(false);
-    expect(isKrogerEligibleItem({ is_removed: false, is_checked: true }, true)).toBe(true);
-    expect(isKrogerEligibleItem({ is_removed: false, is_checked: false })).toBe(true);
-  });
-
   it('builds a product search term from display name only', () => {
     expect(cartSearchTerm({ display_name: 'Black beans' })).toBe('Black beans');
   });
