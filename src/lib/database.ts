@@ -127,7 +127,7 @@ export async function saveMeal(householdId: string, values: MealFormValues, meal
       quantity: ingredient.quantity,
       unit: null,
       preparation_note: null,
-      is_optional: ingredient.is_optional,
+      is_optional: false,
     });
   }
 

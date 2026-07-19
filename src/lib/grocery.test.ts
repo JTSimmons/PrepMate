@@ -78,7 +78,7 @@ describe('aggregateGroceryItems', () => {
     expect(items[0].notes).toBeNull();
   });
 
-  it('skips optional ingredients and preserves null quantities', () => {
+  it('includes formerly optional ingredients and preserves null quantities', () => {
     const items = aggregateGroceryItems([
       selectedMeal('Salad', [
         ingredient({ quantity: 2, unit: 'oz', is_optional: true }),
@@ -86,7 +86,10 @@ describe('aggregateGroceryItems', () => {
       ]),
     ]);
 
-    expect(items).toHaveLength(1);
-    expect(items[0]).toMatchObject({ display_name: 'Salt', quantity: null, unit: null });
+    expect(items).toHaveLength(2);
+    expect(items).toEqual(expect.arrayContaining([
+      expect.objectContaining({ display_name: 'Rice', quantity: 2, unit: null }),
+      expect.objectContaining({ display_name: 'Salt', quantity: null, unit: null }),
+    ]));
   });
 });

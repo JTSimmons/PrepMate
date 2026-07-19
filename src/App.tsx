@@ -38,7 +38,6 @@ import type {
 const emptyIngredient = (): IngredientRowInput => ({
   name: '',
   quantity: null,
-  is_optional: false,
 });
 
 const emptyMealForm: MealFormValues = {
@@ -59,7 +58,6 @@ function mealToForm(meal: Meal): MealFormValues {
         ingredient_id: row.ingredient_id,
         name: row.ingredients?.name ?? '',
         quantity: row.quantity,
-        is_optional: row.is_optional,
       })) ?? [emptyIngredient()],
   };
 }
@@ -363,10 +361,6 @@ export function MealForm({
             value={ingredient.quantity ?? ''}
             onChange={(event) => updateIngredient(index, { quantity: event.target.value ? Number(event.target.value) : null })}
           />
-          <label className="check-label">
-            <input type="checkbox" checked={ingredient.is_optional} onChange={(event) => updateIngredient(index, { is_optional: event.target.checked })} />
-            Optional
-          </label>
           <button type="button" onClick={() => setValues({ ...values, ingredients: values.ingredients.filter((_, rowIndex) => rowIndex !== index) })}>
             Remove
           </button>

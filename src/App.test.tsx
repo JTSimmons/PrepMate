@@ -8,7 +8,7 @@ const initialValues: MealFormValues = {
   name: '',
   recipe_url: '',
   notes: '',
-  ingredients: [{ name: '', quantity: null, is_optional: false }],
+  ingredients: [{ name: '', quantity: null }],
 };
 
 describe('MealForm', () => {

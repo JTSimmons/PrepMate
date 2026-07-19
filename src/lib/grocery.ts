@@ -18,7 +18,7 @@ export function aggregateGroceryItems(selectedMeals: SelectedMeal[]): Aggregated
   for (const selected of selectedMeals) {
     const mealIngredients = selected.meal.meal_ingredients ?? [];
     for (const row of mealIngredients) {
-      if (row.is_optional || !row.ingredients) {
+      if (!row.ingredients) {
         continue;
       }
 
