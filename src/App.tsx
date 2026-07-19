@@ -1,7 +1,7 @@
 import type { Session } from '@supabase/supabase-js';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { MouseEvent } from 'react';
-import { NavLink, Navigate, Route, Routes } from 'react-router-dom';
+import { NavLink, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import {
   addManualShoppingListItem,
   createShoppingListSnapshot,
@@ -401,6 +401,7 @@ function PlanPage({ householdId, meals }: { householdId: string; meals: Meal[] }
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [message, setMessage] = useState('');
   const [saving, setSaving] = useState(false);
+  const navigate = useNavigate();
 
   const selectedMeals: SelectedMeal[] = useMemo(
     () =>
@@ -423,10 +424,9 @@ function PlanPage({ householdId, meals }: { householdId: string; meals: Meal[] }
     setSaving(true);
     try {
       await createShoppingListSnapshot(householdId, selectedMeals);
-      setMessage('Saved a new grocery-list snapshot.');
+      navigate('/grocery-list');
     } catch (caught) {
       setMessage((caught as Error).message);
-    } finally {
       setSaving(false);
     }
   }
