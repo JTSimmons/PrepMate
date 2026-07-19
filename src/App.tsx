@@ -10,7 +10,6 @@ import {
   fetchMeals,
   getOrCreateHousehold,
   saveMeal,
-  updateShoppingListItem,
 } from './lib/database';
 import { aggregateGroceryItems } from './lib/grocery';
 import {
@@ -32,7 +31,6 @@ import type {
   MealFormValues,
   SelectedMeal,
   ShoppingList,
-  ShoppingListItem,
 } from './lib/types';
 
 const emptyIngredient = (): IngredientRowInput => ({
@@ -554,15 +552,14 @@ function PlanPage({ householdId, meals }: { householdId: string; meals: Meal[] }
 
 function GroceryPage({ householdId }: { householdId: string }) {
   const [list, setList] = useState<ShoppingList | null>(null);
-  const [items, setItems] = useState<ShoppingListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState(initialGroceryMessage);
   const [manual, setManual] = useState({ display_name: '', quantity: '', unit: '', category: '', notes: '' });
+  const [krogerRefreshKey, setKrogerRefreshKey] = useState(0);
 
   const refresh = useCallback(async () => {
     const result = await fetchLatestShoppingList(householdId);
     setList(result.list);
-    setItems(result.items);
   }, [householdId]);
 
   useEffect(() => {
@@ -574,11 +571,6 @@ function GroceryPage({ householdId }: { householdId: string }) {
       .catch((caught: Error) => setMessage(caught.message))
       .finally(() => setLoading(false));
   }, [refresh]);
-
-  async function patchItem(id: string, patch: Partial<ShoppingListItem>) {
-    await updateShoppingListItem(id, patch);
-    setItems((current) => current.map((item) => (item.id === id ? { ...item, ...patch } : item)));
-  }
 
   async function addManual(event: React.FormEvent) {
     event.preventDefault();
@@ -598,14 +590,8 @@ function GroceryPage({ householdId }: { householdId: string }) {
     });
     setManual({ display_name: '', quantity: '', unit: '', category: '', notes: '' });
     await refresh();
+    setKrogerRefreshKey((current) => current + 1);
   }
-
-  const visibleItems = items.filter((item) => !item.is_removed);
-  const grouped = visibleItems.reduce<Map<string, ShoppingListItem[]>>((groups, item) => {
-    const category = item.category || 'Other';
-    groups.set(category, [...(groups.get(category) ?? []), item]);
-    return groups;
-  }, new Map());
 
   if (loading) {
     return <main className="center-state">Loading grocery list...</main>;
@@ -632,30 +618,7 @@ function GroceryPage({ householdId }: { householdId: string }) {
             <input placeholder="Notes" value={manual.notes} onChange={(event) => setManual({ ...manual, notes: event.target.value })} />
             <button className="primary">Add</button>
           </form>
-          <KrogerCartPanel shoppingListId={list.id} />
-          {visibleItems.length === 0 ? (
-            <section className="empty-state">All items are removed. Add manual items if needed.</section>
-          ) : (
-            [...grouped.entries()].map(([category, categoryItems]) => (
-              <section className="card" key={category}>
-                <h3>{category}</h3>
-                <div className="shopping-items">
-                  {categoryItems.map((item) => (
-                    <div className={`shopping-item ${item.is_checked ? 'checked' : ''}`} key={item.id}>
-                      <input aria-label={`Check ${item.display_name}`} type="checkbox" checked={item.is_checked} onChange={(event) => patchItem(item.id, { is_checked: event.target.checked })} />
-                      <input aria-label="Item name" value={item.display_name} onChange={(event) => patchItem(item.id, { display_name: event.target.value })} />
-                      <input aria-label="Item quantity" type="number" step="0.01" value={item.quantity ?? ''} onChange={(event) => patchItem(item.id, { quantity: event.target.value ? Number(event.target.value) : null })} />
-                      <input aria-label="Item unit" value={item.unit ?? ''} onChange={(event) => patchItem(item.id, { unit: event.target.value })} />
-                      <input aria-label="Item notes" value={item.notes ?? ''} onChange={(event) => patchItem(item.id, { notes: event.target.value })} />
-                      <button type="button" className="danger" onClick={() => patchItem(item.id, { is_removed: true })}>
-                        Remove
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            ))
-          )}
+          <KrogerCartPanel shoppingListId={list.id} refreshKey={krogerRefreshKey} />
         </>
       )}
     </main>
@@ -666,7 +629,7 @@ function initialGroceryMessage() {
   const params = new URLSearchParams(window.location.search);
   const krogerStatus = params.get('kroger');
   if (krogerStatus === 'connected') {
-    return 'Kroger is connected. Open Kroger cart review and refresh matches.';
+    return 'Kroger is connected. Refresh the Kroger cart review if needed.';
   }
   if (krogerStatus === 'error') {
     return params.get('kroger_message') ?? 'Kroger authorization failed.';
@@ -674,14 +637,14 @@ function initialGroceryMessage() {
   return '';
 }
 
-function KrogerCartPanel({ shoppingListId }: { shoppingListId: string }) {
-  return <KrogerCartPanelReview shoppingListId={shoppingListId} />;
+function KrogerCartPanel({ shoppingListId, refreshKey }: { shoppingListId: string; refreshKey: number }) {
+  return <KrogerCartPanelReview shoppingListId={shoppingListId} refreshKey={refreshKey} />;
 }
 
-function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
-  const [expanded, setExpanded] = useState(false);
+function KrogerCartPanelReview({ shoppingListId, refreshKey }: { shoppingListId: string; refreshKey: number }) {
+  const [expanded, setExpanded] = useState(true);
   const [connected, setConnected] = useState(false);
-  const [includeChecked, setIncludeChecked] = useState(false);
+  const [includeChecked, setIncludeChecked] = useState(true);
   const [items, setItems] = useState<KrogerPreviewItem[]>([]);
   const [locationId, setLocationId] = useState('');
   const [loading, setLoading] = useState(false);
@@ -715,7 +678,7 @@ function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
       return;
     }
     void loadPreview();
-  }, [expanded, loadPreview]);
+  }, [expanded, loadPreview, refreshKey]);
 
   async function connectKroger() {
     setMessage('');
