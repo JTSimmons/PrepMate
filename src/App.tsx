@@ -3,7 +3,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { MouseEvent } from 'react';
 import { NavLink, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import {
-  addManualShoppingListItem,
   createShoppingListSnapshot,
   deleteMeal,
   fetchLatestShoppingList,
@@ -590,7 +589,6 @@ function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
   const [searchingLocations, setSearchingLocations] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
-  const [manual, setManual] = useState({ display_name: '', quantity: '', notes: '' });
   const [searchingItemId, setSearchingItemId] = useState<string | null>(null);
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
   const [productsByItem, setProductsByItem] = useState<Record<string, KrogerProduct[]>>({});
@@ -720,29 +718,6 @@ function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
     } catch (caught) {
       setMessage((caught as Error).message);
       await loadPreview();
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function addManual(event: React.FormEvent) {
-    event.preventDefault();
-    if (!manual.display_name.trim()) {
-      setMessage('Item name is required.');
-      return;
-    }
-    setLoading(true);
-    setMessage('');
-    try {
-      await addManualShoppingListItem(shoppingListId, {
-        display_name: manual.display_name.trim(),
-        quantity: manual.quantity ? Number(manual.quantity) : null,
-        notes: manual.notes.trim(),
-      });
-      setManual({ display_name: '', quantity: '', notes: '' });
-      await loadPreview();
-    } catch (caught) {
-      setMessage((caught as Error).message);
     } finally {
       setLoading(false);
     }
@@ -975,12 +950,6 @@ function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
               </button>
             </div>
           )}
-          <form className="manual-form add-cart-item-form" onSubmit={addManual}>
-            <input placeholder="Add item" value={manual.display_name} onChange={(event) => setManual({ ...manual, display_name: event.target.value })} />
-            <input placeholder="Qty" type="number" step="0.01" value={manual.quantity} onChange={(event) => setManual({ ...manual, quantity: event.target.value })} />
-            <input placeholder="Notes" value={manual.notes} onChange={(event) => setManual({ ...manual, notes: event.target.value })} />
-            <button className="primary" disabled={loading}>{loading ? 'Adding...' : 'Add item'}</button>
-          </form>
         </div>
     </section>
   );

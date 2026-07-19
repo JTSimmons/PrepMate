@@ -340,11 +340,6 @@ nav a.active {
   margin: 1rem 0;
 }
 
-.add-cart-item-form {
-  border-top: 1px solid #edf1ea;
-  padding-top: 0.85rem;
-}
-
 .kroger-settings {
   border-top: 1px solid #edf1ea;
   display: grid;
