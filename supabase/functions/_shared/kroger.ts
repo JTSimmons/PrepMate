@@ -18,6 +18,9 @@ export type KrogerProduct = {
   size: string | null;
   imageUrl: string | null;
   price: number | null;
+  regularPrice: number | null;
+  promoPrice: number | null;
+  isOnSale: boolean;
 };
 
 const defaultBaseUrl = 'https://api.kroger.com/v1';
@@ -146,6 +149,9 @@ export function mapKrogerProduct(product: Record<string, unknown>): KrogerProduc
   const sizes = Array.isArray(firstImage?.sizes) ? firstImage.sizes as Record<string, unknown>[] : [];
   const firstSize = sizes[0];
   const price = firstItem.price as Record<string, unknown> | undefined;
+  const regularPrice = typeof price?.regular === 'number' ? price.regular : null;
+  const promoPrice = typeof price?.promo === 'number' ? price.promo : null;
+  const isOnSale = regularPrice !== null && promoPrice !== null && promoPrice < regularPrice;
 
   return {
     upc: String(product.upc ?? ''),
@@ -153,7 +159,10 @@ export function mapKrogerProduct(product: Record<string, unknown>): KrogerProduc
     brand: product.brand ? String(product.brand) : null,
     size: firstItem.size ? String(firstItem.size) : null,
     imageUrl: firstSize?.url ? String(firstSize.url) : null,
-    price: typeof price?.regular === 'number' ? price.regular : null,
+    price: isOnSale ? promoPrice : regularPrice,
+    regularPrice,
+    promoPrice,
+    isOnSale,
   };
 }
 

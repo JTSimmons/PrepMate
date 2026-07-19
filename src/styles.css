@@ -429,6 +429,28 @@ nav a.active {
   color: #59665d;
 }
 
+.price-line {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0.15rem 0 0;
+}
+
+.regular-price {
+  color: #59665d;
+  text-decoration: line-through;
+}
+
+.sale-badge {
+  background: #fff1ef;
+  border-radius: 999px;
+  color: #923d37;
+  font-size: 0.75rem;
+  font-weight: 750;
+  padding: 0.1rem 0.45rem;
+}
+
 .kroger-item-summary {
   display: grid;
   gap: 0.35rem;

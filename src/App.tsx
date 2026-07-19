@@ -560,6 +560,34 @@ function initialGroceryMessage() {
   return '';
 }
 
+function formatMoney(value: number | null) {
+  return value === null ? null : `$${value.toFixed(2)}`;
+}
+
+function krogerProductPrice(product: KrogerProduct) {
+  const currentPrice = formatMoney(product.price);
+  if (!currentPrice) {
+    return null;
+  }
+  return {
+    currentPrice,
+    regularPrice: product.isOnSale ? formatMoney(product.regularPrice) : null,
+    isOnSale: product.isOnSale,
+  };
+}
+
+function krogerMatchPrice(match: NonNullable<ReturnType<typeof activeKrogerMatch>>) {
+  const currentPrice = formatMoney(match.price);
+  if (!currentPrice) {
+    return null;
+  }
+  return {
+    currentPrice,
+    regularPrice: match.is_on_sale ? formatMoney(match.regular_price) : null,
+    isOnSale: match.is_on_sale,
+  };
+}
+
 function KrogerCartPanel({ shoppingListId }: { shoppingListId: string }) {
   return <KrogerCartPanelReview shoppingListId={shoppingListId} />;
 }
@@ -766,6 +794,7 @@ function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
                 const isExpanded = expandedItemId === item.id;
                 const isActive = activeItem?.id === item.id;
                 const isAdded = match?.status === 'added';
+                const selectedPrice = match ? krogerMatchPrice(match) : null;
                 return (
                   <article
                     className={`kroger-review-item ${isActive ? 'active-review-item' : ''}`}
@@ -790,7 +819,14 @@ function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
                         {match.image_url && <img src={match.image_url} alt="" />}
                         <div>
                           <strong>{match.product_name}</strong>
-                          <p>{[match.brand, match.size, match.price ? `$${match.price.toFixed(2)}` : null].filter(Boolean).join(' · ')}</p>
+                          <p>{[match.brand, match.size].filter(Boolean).join(' - ')}</p>
+                          {selectedPrice && (
+                            <p className="price-line">
+                              <strong>{selectedPrice.currentPrice}</strong>
+                              {selectedPrice.regularPrice && <span className="regular-price">{selectedPrice.regularPrice}</span>}
+                              {selectedPrice.isOnSale && <span className="sale-badge">Sale</span>}
+                            </p>
+                          )}
                         </div>
                       </div>
                     )}
@@ -835,20 +871,30 @@ function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
                     </div>
                     {products.length > 0 && (
                       <div className="product-results">
-                        {products.map((product) => (
-                          <button
-                            type="button"
-                            className={`product-choice ${match?.kroger_product_upc === product.upc ? 'selected-product-choice' : ''}`}
-                            key={product.upc}
-                            onClick={() => chooseProduct(item, product)}
-                          >
-                            {product.imageUrl && <img src={product.imageUrl} alt="" />}
-                            <span>
-                              <strong>{product.description}</strong>
-                              <small>{[product.brand, product.size, product.price ? `$${product.price.toFixed(2)}` : null].filter(Boolean).join(' · ')}</small>
-                            </span>
-                          </button>
-                        ))}
+                        {products.map((product) => {
+                          const productPrice = krogerProductPrice(product);
+                          return (
+                            <button
+                              type="button"
+                              className={`product-choice ${match?.kroger_product_upc === product.upc ? 'selected-product-choice' : ''}`}
+                              key={product.upc}
+                              onClick={() => chooseProduct(item, product)}
+                            >
+                              {product.imageUrl && <img src={product.imageUrl} alt="" />}
+                              <span>
+                                <strong>{product.description}</strong>
+                                <small>{[product.brand, product.size].filter(Boolean).join(' - ')}</small>
+                                {productPrice && (
+                                  <span className="price-line">
+                                    <strong>{productPrice.currentPrice}</strong>
+                                    {productPrice.regularPrice && <span className="regular-price">{productPrice.regularPrice}</span>}
+                                    {productPrice.isOnSale && <span className="sale-badge">Sale</span>}
+                                  </span>
+                                )}
+                              </span>
+                            </button>
+                          );
+                        })}
                       </div>
                     )}
                       </>

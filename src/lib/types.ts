@@ -112,6 +112,9 @@ export type ShoppingListKrogerMatch = {
   size: string | null;
   image_url: string | null;
   price: number | null;
+  regular_price: number | null;
+  promo_price: number | null;
+  is_on_sale: boolean;
   package_quantity: number;
   allow_substitutes: boolean;
   special_instructions: string | null;
@@ -129,6 +132,9 @@ export type KrogerProduct = {
   size: string | null;
   imageUrl: string | null;
   price: number | null;
+  regularPrice: number | null;
+  promoPrice: number | null;
+  isOnSale: boolean;
 };
 
 export type KrogerPreviewItem = ShoppingListItem & {
