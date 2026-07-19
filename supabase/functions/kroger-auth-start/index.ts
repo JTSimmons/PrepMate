@@ -12,11 +12,11 @@ Deno.serve(async (request) => {
     const state = crypto.randomUUID();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
-    const { error } = await supabase.schema('private').from('kroger_oauth_states').insert({
-      state,
-      user_id: user.id,
-      redirect_to: typeof body.redirectTo === 'string' ? body.redirectTo : null,
-      expires_at: expiresAt,
+    const { error } = await supabase.rpc('kroger_create_oauth_state', {
+      state_value: state,
+      state_user_id: user.id,
+      state_redirect_to: typeof body.redirectTo === 'string' ? body.redirectTo : null,
+      state_expires_at: expiresAt,
     });
     if (error) throw new Error(error.message);
 

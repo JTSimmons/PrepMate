@@ -18,10 +18,7 @@ Deno.serve(async (request) => {
   try {
     const supabase = serviceClient();
     const { data: stateRow, error: stateError } = await supabase
-      .schema('private')
-      .from('kroger_oauth_states')
-      .select('*')
-      .eq('state', state)
+      .rpc('kroger_get_oauth_state', { state_value: state })
       .maybeSingle();
     if (stateError) throw new Error(stateError.message);
     if (!stateRow || new Date(stateRow.expires_at).getTime() < Date.now()) {
@@ -30,17 +27,17 @@ Deno.serve(async (request) => {
 
     const token = await exchangeCodeForToken(code);
     const expiresAt = new Date(Date.now() + Number(token.expires_in ?? 1800) * 1000).toISOString();
-    const { error: upsertError } = await supabase.schema('private').from('kroger_connections').upsert({
-      user_id: stateRow.user_id,
-      access_token: token.access_token,
-      refresh_token: token.refresh_token,
-      token_type: token.token_type ?? 'Bearer',
-      scope: token.scope ?? null,
-      expires_at: expiresAt,
+    const { error: upsertError } = await supabase.rpc('kroger_upsert_connection', {
+      connection_user_id: stateRow.user_id,
+      connection_access_token: token.access_token,
+      connection_refresh_token: token.refresh_token,
+      connection_token_type: token.token_type ?? 'Bearer',
+      connection_scope: token.scope ?? null,
+      connection_expires_at: expiresAt,
     });
     if (upsertError) throw new Error(upsertError.message);
 
-    await supabase.schema('private').from('kroger_oauth_states').delete().eq('state', state);
+    await supabase.rpc('kroger_delete_oauth_state', { state_value: state });
     return htmlResponse(closePage('Kroger is connected. You can close this tab and return to PrepMate.'));
   } catch (caught) {
     return htmlResponse(closePage(caught instanceof Error ? caught.message : 'Kroger authorization failed.'), 400);

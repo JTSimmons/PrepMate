@@ -107,7 +107,14 @@ export async function refreshKrogerToken(supabase: SupabaseClient, connection: K
     scope: token.scope ?? connection.scope,
     expires_at: expiresAt,
   };
-  const { error } = await supabase.schema('private').from('kroger_connections').update(nextConnection).eq('user_id', connection.user_id);
+  const { error } = await supabase.rpc('kroger_upsert_connection', {
+    connection_user_id: connection.user_id,
+    connection_access_token: nextConnection.access_token,
+    connection_refresh_token: nextConnection.refresh_token,
+    connection_token_type: nextConnection.token_type,
+    connection_scope: nextConnection.scope,
+    connection_expires_at: nextConnection.expires_at,
+  });
   if (error) {
     throw new Error(error.message);
   }
@@ -115,7 +122,7 @@ export async function refreshKrogerToken(supabase: SupabaseClient, connection: K
 }
 
 export async function getFreshKrogerConnection(supabase: SupabaseClient, userId: string) {
-  const { data, error } = await supabase.schema('private').from('kroger_connections').select('*').eq('user_id', userId).maybeSingle();
+  const { data, error } = await supabase.rpc('kroger_get_connection', { connection_user_id: userId }).maybeSingle();
   if (error) {
     throw new Error(error.message);
   }
