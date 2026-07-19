@@ -16,7 +16,7 @@ function ingredient(overrides: Partial<MealIngredient>): MealIngredient {
       name: 'Rice',
       normalized_name: 'rice',
       default_unit: 'cup',
-      grocery_category: 'Dry Goods',
+      grocery_category: null,
     },
     ...overrides,
   };
@@ -42,12 +42,12 @@ function selectedMeal(name: string, rows: MealIngredient[], overrides: Partial<S
 describe('aggregateGroceryItems', () => {
   it('combines ingredients with matching normalized names and units', () => {
     const items = aggregateGroceryItems([
-      selectedMeal('Burritos', [ingredient({ quantity: 1, unit: 'can', ingredients: { id: 'a', name: 'Black Beans', normalized_name: 'black beans', default_unit: 'can', grocery_category: 'Canned' } })]),
-      selectedMeal('Soup', [ingredient({ quantity: 2, unit: 'CAN', ingredients: { id: 'b', name: ' black beans ', normalized_name: 'black beans', default_unit: 'can', grocery_category: 'Canned' } })]),
+      selectedMeal('Burritos', [ingredient({ quantity: 1, unit: 'can', ingredients: { id: 'a', name: 'Black Beans', normalized_name: 'black beans', default_unit: 'can', grocery_category: null } })]),
+      selectedMeal('Soup', [ingredient({ quantity: 2, unit: 'CAN', ingredients: { id: 'b', name: ' black beans ', normalized_name: 'black beans', default_unit: 'can', grocery_category: null } })]),
     ]);
 
     expect(items).toHaveLength(1);
-    expect(items[0]).toMatchObject({ display_name: 'Black Beans', quantity: 3, unit: 'can' });
+    expect(items[0]).toMatchObject({ display_name: 'Black Beans', quantity: 3, unit: 'can', category: null });
     expect(items[0].sources.map((source) => source.mealName)).toEqual(['Burritos', 'Soup']);
   });
 

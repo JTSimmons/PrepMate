@@ -22,7 +22,6 @@ Deno.serve(async (request) => {
       .select('*')
       .eq('shopping_list_id', shoppingListId)
       .eq('is_removed', false)
-      .order('category', { ascending: true })
       .order('display_name', { ascending: true });
     if (!includeChecked) {
       itemQuery = itemQuery.eq('is_checked', false);

@@ -50,7 +50,7 @@ export function aggregateGroceryItems(selectedMeals: SelectedMeal[]): Aggregated
         normalized_name: normalizedName,
         quantity,
         unit,
-        category: row.ingredients.grocery_category,
+        category: null,
         notes: note,
         source: 'meal',
         is_checked: false,
@@ -60,8 +60,5 @@ export function aggregateGroceryItems(selectedMeals: SelectedMeal[]): Aggregated
     }
   }
 
-  return [...items.values()].sort((a, b) => {
-    const categoryCompare = (a.category ?? '').localeCompare(b.category ?? '');
-    return categoryCompare || a.display_name.localeCompare(b.display_name);
-  });
+  return [...items.values()].sort((a, b) => a.display_name.localeCompare(b.display_name));
 }

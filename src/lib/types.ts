@@ -12,7 +12,6 @@ export type IngredientRowInput = {
   unit: string;
   preparation_note: string;
   is_optional: boolean;
-  grocery_category: string;
 };
 
 export type Meal = {

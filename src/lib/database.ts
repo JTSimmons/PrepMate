@@ -61,7 +61,6 @@ async function findOrCreateIngredient(householdId: string, input: IngredientRowI
   const client = requireSupabase();
   const normalizedName = normalizeIngredientName(input.name);
   const defaultUnit = input.unit.trim() || null;
-  const category = input.grocery_category.trim() || null;
 
   let ingredientQuery = client
     .from('ingredients')
@@ -84,7 +83,6 @@ async function findOrCreateIngredient(householdId: string, input: IngredientRowI
       name: input.name.trim(),
       normalized_name: normalizedName,
       default_unit: defaultUnit,
-      grocery_category: category,
     })
     .select('id')
     .single();
@@ -224,7 +222,6 @@ export async function fetchLatestShoppingList(householdId: string) {
     .from('shopping_list_items')
     .select('*')
     .eq('shopping_list_id', list.id)
-    .order('category', { ascending: true })
     .order('display_name', { ascending: true });
   assertNoError(itemsError);
   return { list: list as ShoppingList, items: (items ?? []) as ShoppingListItem[] };

@@ -10,7 +10,7 @@ const initialValues: MealFormValues = {
   recipe_url: '',
   notes: '',
   default_servings: 4,
-  ingredients: [{ name: '', quantity: null, unit: '', preparation_note: '', is_optional: false, grocery_category: '' }],
+  ingredients: [{ name: '', quantity: null, unit: '', preparation_note: '', is_optional: false }],
 };
 
 describe('MealForm', () => {

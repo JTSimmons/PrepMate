@@ -39,7 +39,6 @@ const emptyIngredient = (): IngredientRowInput => ({
   unit: '',
   preparation_note: '',
   is_optional: false,
-  grocery_category: '',
 });
 
 const emptyMealForm: MealFormValues = {
@@ -67,7 +66,6 @@ function mealToForm(meal: Meal): MealFormValues {
         unit: row.unit ?? row.ingredients?.default_unit ?? '',
         preparation_note: row.preparation_note ?? '',
         is_optional: row.is_optional,
-        grocery_category: row.ingredients?.grocery_category ?? '',
       })) ?? [emptyIngredient()],
   };
 }
@@ -390,12 +388,6 @@ export function MealForm({
             onChange={(event) => updateIngredient(index, { quantity: event.target.value ? Number(event.target.value) : null })}
           />
           <input aria-label="Unit" placeholder="Unit" value={ingredient.unit} onChange={(event) => updateIngredient(index, { unit: event.target.value })} />
-          <input
-            aria-label="Category"
-            placeholder="Category"
-            value={ingredient.grocery_category}
-            onChange={(event) => updateIngredient(index, { grocery_category: event.target.value })}
-          />
           <input
             aria-label="Preparation note"
             placeholder="Prep note"
