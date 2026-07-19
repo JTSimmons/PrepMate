@@ -1,5 +1,6 @@
 import type { Session } from '@supabase/supabase-js';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import type { MouseEvent } from 'react';
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom';
 import {
   addManualShoppingListItem,
@@ -777,6 +778,21 @@ function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
     setExpandedItemId(nextItem?.id ?? null);
   }
 
+  function toggleExpandedItem(itemId: string) {
+    setExpandedItemId((current) => (current === itemId ? null : itemId));
+  }
+
+  function shouldIgnoreCardToggle(target: EventTarget | null) {
+    return target instanceof Element && Boolean(target.closest('button, input, textarea, select, label, a'));
+  }
+
+  function handleReviewItemClick(event: MouseEvent<HTMLElement>, itemId: string) {
+    if (shouldIgnoreCardToggle(event.target)) {
+      return;
+    }
+    toggleExpandedItem(itemId);
+  }
+
   async function submitApproved() {
     setLoading(true);
     setMessage('');
@@ -837,9 +853,13 @@ function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
                 const isActive = activeItem?.id === item.id;
                 const isAdded = match?.status === 'added';
                 return (
-                  <article className={`kroger-review-item ${isActive ? 'active-review-item' : ''}`} key={item.id}>
+                  <article
+                    className={`kroger-review-item ${isActive ? 'active-review-item' : ''}`}
+                    key={item.id}
+                    onClick={(event) => handleReviewItemClick(event, item.id)}
+                  >
                     <div className="kroger-item-summary">
-                      <button type="button" className="summary-toggle" onClick={() => setExpandedItemId((current) => (current === item.id ? null : item.id))}>
+                      <button type="button" className="summary-toggle" onClick={() => toggleExpandedItem(item.id)}>
                         <span>
                           <strong>{item.display_name}</strong>
                           <small>{[item.quantity, item.unit].filter(Boolean).join(' ')} {item.notes ? `- ${item.notes}` : ''}</small>
