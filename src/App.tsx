@@ -749,11 +749,6 @@ function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
       allow_substitutes: activeKrogerMatch(item)?.allow_substitutes ?? true,
     });
     setItems((current) => current.map((currentItem) => (currentItem.id === item.id ? { ...currentItem, shopping_list_kroger_matches: [match] } : currentItem)));
-    setProductsByItem((current) => {
-      const next = { ...current };
-      delete next[item.id];
-      return next;
-    });
     advanceExpandedItem(item.id);
   }
 
@@ -779,7 +774,7 @@ function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
 
   function advanceExpandedItem(completedItemId: string) {
     const nextItem = items.find((candidate) => candidate.id !== completedItemId && !isKrogerReviewComplete(activeKrogerMatch(candidate)));
-    setExpandedItemId(nextItem?.id ?? completedItemId);
+    setExpandedItemId(nextItem?.id ?? null);
   }
 
   async function submitApproved() {
@@ -905,7 +900,12 @@ function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
                     {products.length > 0 && (
                       <div className="product-results">
                         {products.map((product) => (
-                          <button type="button" className="product-choice" key={product.upc} onClick={() => chooseProduct(item, product)}>
+                          <button
+                            type="button"
+                            className={`product-choice ${match?.kroger_product_upc === product.upc ? 'selected-product-choice' : ''}`}
+                            key={product.upc}
+                            onClick={() => chooseProduct(item, product)}
+                          >
                             {product.imageUrl && <img src={product.imageUrl} alt="" />}
                             <span>
                               <strong>{product.description}</strong>

@@ -404,6 +404,11 @@ nav a.active {
   text-align: left;
 }
 
+.product-choice.selected-product-choice {
+  border-color: #216b4e;
+  box-shadow: 0 0 0 2px rgba(33, 107, 78, 0.14);
+}
+
 .product-choice span {
   display: grid;
   gap: 0.1rem;
