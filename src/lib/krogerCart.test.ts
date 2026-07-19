@@ -29,8 +29,8 @@ describe('Kroger cart helpers', () => {
     expect(isKrogerEligibleItem({ is_removed: false, is_checked: false })).toBe(true);
   });
 
-  it('builds a product search term from display name and unit', () => {
-    expect(cartSearchTerm({ display_name: 'Black beans', unit: 'can', notes: null })).toBe('Black beans can');
+  it('builds a product search term from display name only', () => {
+    expect(cartSearchTerm({ display_name: 'Black beans' })).toBe('Black beans');
   });
 
   it('requires an approved product and positive package count', () => {

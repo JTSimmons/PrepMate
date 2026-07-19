@@ -10,7 +10,7 @@ const initialValues: MealFormValues = {
   recipe_url: '',
   notes: '',
   default_servings: 4,
-  ingredients: [{ name: '', quantity: null, unit: '', preparation_note: '', is_optional: false }],
+  ingredients: [{ name: '', preparation_note: '', is_optional: false }],
 };
 
 describe('MealForm', () => {
@@ -30,19 +30,15 @@ describe('MealForm', () => {
 
     await userEvent.type(screen.getByLabelText('Meal name'), 'Chicken bowls');
     await userEvent.type(screen.getByLabelText('Ingredient name'), 'Chicken');
-    await userEvent.type(screen.getByLabelText('Quantity'), '2');
-    await userEvent.type(screen.getByLabelText('Unit'), 'lb');
     await userEvent.click(screen.getByRole('button', { name: /add ingredient/i }));
     await userEvent.type(screen.getAllByLabelText('Ingredient name')[1], 'Rice');
-    await userEvent.type(screen.getAllByLabelText('Quantity')[1], '1');
-    await userEvent.type(screen.getAllByLabelText('Unit')[1], 'cup');
     await userEvent.click(screen.getByRole('button', { name: /save meal/i }));
 
     expect(onSave).toHaveBeenCalledWith(expect.objectContaining({
       name: 'Chicken bowls',
       ingredients: expect.arrayContaining([
-        expect.objectContaining({ name: 'Chicken', quantity: 2, unit: 'lb' }),
-        expect.objectContaining({ name: 'Rice', quantity: 1, unit: 'cup' }),
+        expect.objectContaining({ name: 'Chicken' }),
+        expect.objectContaining({ name: 'Rice' }),
       ]),
     }));
   });

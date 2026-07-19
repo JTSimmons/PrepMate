@@ -60,15 +60,13 @@ export async function fetchMeals(householdId: string): Promise<Meal[]> {
 async function findOrCreateIngredient(householdId: string, input: IngredientRowInput) {
   const client = requireSupabase();
   const normalizedName = normalizeIngredientName(input.name);
-  const defaultUnit = input.unit.trim() || null;
 
-  let ingredientQuery = client
+  const ingredientQuery = client
     .from('ingredients')
     .select('id')
     .eq('household_id', householdId)
-    .eq('normalized_name', normalizedName);
-
-  ingredientQuery = defaultUnit === null ? ingredientQuery.is('default_unit', null) : ingredientQuery.eq('default_unit', defaultUnit);
+    .eq('normalized_name', normalizedName)
+    .is('default_unit', null);
 
   const { data: existing, error: findError } = await ingredientQuery.maybeSingle();
   assertNoError(findError);
@@ -82,7 +80,7 @@ async function findOrCreateIngredient(householdId: string, input: IngredientRowI
       household_id: householdId,
       name: input.name.trim(),
       normalized_name: normalizedName,
-      default_unit: defaultUnit,
+      default_unit: null,
     })
     .select('id')
     .single();
@@ -126,8 +124,8 @@ export async function saveMeal(householdId: string, values: MealFormValues, meal
     rows.push({
       meal_id: savedMealId,
       ingredient_id: await findOrCreateIngredient(householdId, ingredient),
-      quantity: ingredient.quantity,
-      unit: ingredient.unit.trim() || null,
+      quantity: null,
+      unit: null,
       preparation_note: ingredient.preparation_note.trim() || null,
       is_optional: ingredient.is_optional,
     });
@@ -237,8 +235,8 @@ export async function addManualShoppingListItem(shoppingListId: string, item: Pa
     shopping_list_id: shoppingListId,
     ingredient_id: null,
     display_name: item.display_name,
-    quantity: item.quantity ?? null,
-    unit: item.unit || null,
+    quantity: null,
+    unit: null,
     category: item.category || null,
     source: 'manual',
     is_checked: false,

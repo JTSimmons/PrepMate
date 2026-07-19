@@ -116,7 +116,7 @@ Vitest covers grocery-list aggregation, Kroger cart eligibility helpers, and mea
 
 ## Grocery List Behavior
 
-Generated grocery lists are persisted snapshots in `shopping_lists` and `shopping_list_items`. They are not continuously recalculated after meal changes. Ingredients combine only when the normalized ingredient name and unit match. The first normalization pass trims names and compares them case-insensitively; no unsafe unit conversions are attempted.
+Generated grocery lists are persisted snapshots in `shopping_lists` and `shopping_list_items`. They are not continuously recalculated after meal changes. Ingredients combine by normalized ingredient name. PrepMate intentionally keeps grocery items name-only; the shopper chooses the exact package and amount in Kroger.
 
 ## GitHub Pages Deployment
 

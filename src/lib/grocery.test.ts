@@ -40,33 +40,34 @@ function selectedMeal(name: string, rows: MealIngredient[], overrides: Partial<S
 }
 
 describe('aggregateGroceryItems', () => {
-  it('combines ingredients with matching normalized names and units', () => {
+  it('combines ingredients with matching normalized names', () => {
     const items = aggregateGroceryItems([
       selectedMeal('Burritos', [ingredient({ quantity: 1, unit: 'can', ingredients: { id: 'a', name: 'Black Beans', normalized_name: 'black beans', default_unit: 'can', grocery_category: null } })]),
       selectedMeal('Soup', [ingredient({ quantity: 2, unit: 'CAN', ingredients: { id: 'b', name: ' black beans ', normalized_name: 'black beans', default_unit: 'can', grocery_category: null } })]),
     ]);
 
     expect(items).toHaveLength(1);
-    expect(items[0]).toMatchObject({ display_name: 'Black Beans', quantity: 3, unit: 'can', category: null });
+    expect(items[0]).toMatchObject({ display_name: 'Black Beans', quantity: null, unit: null, category: null });
     expect(items[0].sources.map((source) => source.mealName)).toEqual(['Burritos', 'Soup']);
   });
 
-  it('does not combine incompatible units', () => {
+  it('combines matching ingredients regardless of stored units', () => {
     const items = aggregateGroceryItems([
       selectedMeal('Pasta', [ingredient({ quantity: 1, unit: 'lb' })]),
       selectedMeal('Soup', [ingredient({ quantity: 1, unit: 'cup' })]),
     ]);
 
-    expect(items).toHaveLength(2);
-    expect(items.map((item) => item.unit).sort()).toEqual(['cup', 'lb']);
+    expect(items).toHaveLength(1);
+    expect(items[0]).toMatchObject({ display_name: 'Rice', quantity: null, unit: null });
   });
 
-  it('scales quantities by meal count and serving multiplier', () => {
+  it('preserves meal sources without calculating quantities', () => {
     const items = aggregateGroceryItems([
       selectedMeal('Tacos', [ingredient({ quantity: 2, unit: 'tbsp' })], { quantity: 2, servings: 8 }),
     ]);
 
-    expect(items[0].quantity).toBe(8);
+    expect(items[0].quantity).toBeNull();
+    expect(items[0].sources[0]).toMatchObject({ mealName: 'Tacos', quantity: null });
   });
 
   it('skips optional ingredients and preserves null quantities', () => {
@@ -78,6 +79,6 @@ describe('aggregateGroceryItems', () => {
     ]);
 
     expect(items).toHaveLength(1);
-    expect(items[0]).toMatchObject({ display_name: 'Salt', quantity: null, unit: 'to taste' });
+    expect(items[0]).toMatchObject({ display_name: 'Salt', quantity: null, unit: null });
   });
 });

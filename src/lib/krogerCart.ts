@@ -4,8 +4,8 @@ export function isKrogerEligibleItem(item: Pick<ShoppingListItem, 'is_removed' |
   return !item.is_removed && (includeChecked || !item.is_checked);
 }
 
-export function cartSearchTerm(item: Pick<ShoppingListItem, 'display_name' | 'unit' | 'notes'>) {
-  return [item.display_name, item.unit].filter(Boolean).join(' ').trim();
+export function cartSearchTerm(item: Pick<ShoppingListItem, 'display_name'>) {
+  return item.display_name.trim();
 }
 
 export function activeKrogerMatch(item: KrogerPreviewItem): ShoppingListKrogerMatch | null {

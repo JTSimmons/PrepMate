@@ -8,8 +8,6 @@ export type IngredientRowInput = {
   id?: string;
   ingredient_id?: string;
   name: string;
-  quantity: number | null;
-  unit: string;
   preparation_note: string;
   is_optional: boolean;
 };

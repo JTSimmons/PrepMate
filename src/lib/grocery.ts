@@ -1,21 +1,7 @@
-import type { AggregatedGroceryItem, MealIngredient, SelectedMeal } from './types';
+import type { AggregatedGroceryItem, SelectedMeal } from './types';
 
 export function normalizeIngredientName(name: string) {
   return name.trim().toLocaleLowerCase();
-}
-
-function cleanUnit(unit: string | null | undefined) {
-  const value = unit?.trim();
-  return value ? value.toLocaleLowerCase() : null;
-}
-
-function scaledQuantity(row: MealIngredient, mealServings: number, selectedServings: number | null, count: number) {
-  if (row.quantity === null) {
-    return null;
-  }
-
-  const servingMultiplier = selectedServings && mealServings > 0 ? selectedServings / mealServings : 1;
-  return row.quantity * servingMultiplier * count;
 }
 
 export function aggregateGroceryItems(selectedMeals: SelectedMeal[]): AggregatedGroceryItem[] {
@@ -29,15 +15,12 @@ export function aggregateGroceryItems(selectedMeals: SelectedMeal[]): Aggregated
       }
 
       const normalizedName = row.ingredients.normalized_name || normalizeIngredientName(row.ingredients.name);
-      const unit = cleanUnit(row.unit ?? row.ingredients.default_unit);
-      const key = `${normalizedName}::${unit ?? ''}`;
-      const quantity = scaledQuantity(row, selected.meal.default_servings, selected.servings, selected.quantity);
+      const key = normalizedName;
       const note = row.preparation_note?.trim() || null;
       const existing = items.get(key);
 
       if (existing) {
-        existing.quantity = existing.quantity === null || quantity === null ? null : existing.quantity + quantity;
-        existing.sources.push({ mealId: selected.meal.id, mealName: selected.meal.name, quantity });
+        existing.sources.push({ mealId: selected.meal.id, mealName: selected.meal.name, quantity: null });
         if (note && !existing.notes?.includes(note)) {
           existing.notes = existing.notes ? `${existing.notes}; ${note}` : note;
         }
@@ -48,14 +31,14 @@ export function aggregateGroceryItems(selectedMeals: SelectedMeal[]): Aggregated
         ingredient_id: row.ingredient_id,
         display_name: row.ingredients.name.trim(),
         normalized_name: normalizedName,
-        quantity,
-        unit,
+        quantity: null,
+        unit: null,
         category: null,
         notes: note,
         source: 'meal',
         is_checked: false,
         is_removed: false,
-        sources: [{ mealId: selected.meal.id, mealName: selected.meal.name, quantity }],
+        sources: [{ mealId: selected.meal.id, mealName: selected.meal.name, quantity: null }],
       });
     }
   }
