@@ -566,25 +566,21 @@ function formatMoney(value: number | null) {
 
 function krogerProductPrice(product: KrogerProduct) {
   const currentPrice = formatMoney(product.price);
-  if (!currentPrice) {
-    return null;
-  }
   return {
-    currentPrice,
+    currentPrice: currentPrice ?? 'Price unavailable',
     regularPrice: product.isOnSale ? formatMoney(product.regularPrice) : null,
     isOnSale: product.isOnSale,
+    isUnavailable: currentPrice === null,
   };
 }
 
 function krogerMatchPrice(match: NonNullable<ReturnType<typeof activeKrogerMatch>>) {
   const currentPrice = formatMoney(match.price);
-  if (!currentPrice) {
-    return null;
-  }
   return {
-    currentPrice,
+    currentPrice: currentPrice ?? 'Price unavailable',
     regularPrice: match.is_on_sale ? formatMoney(match.regular_price) : null,
     isOnSale: match.is_on_sale,
+    isUnavailable: currentPrice === null,
   };
 }
 
@@ -822,7 +818,7 @@ function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
                           <p>{[match.brand, match.size].filter(Boolean).join(' - ')}</p>
                           {selectedPrice && (
                             <p className="price-line">
-                              <strong>{selectedPrice.currentPrice}</strong>
+                              <strong className={selectedPrice.isUnavailable ? 'price-unavailable' : ''}>{selectedPrice.currentPrice}</strong>
                               {selectedPrice.regularPrice && <span className="regular-price">{selectedPrice.regularPrice}</span>}
                               {selectedPrice.isOnSale && <span className="sale-badge">Sale</span>}
                             </p>
@@ -886,7 +882,7 @@ function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
                                 <small>{[product.brand, product.size].filter(Boolean).join(' - ')}</small>
                                 {productPrice && (
                                   <span className="price-line">
-                                    <strong>{productPrice.currentPrice}</strong>
+                                    <strong className={productPrice.isUnavailable ? 'price-unavailable' : ''}>{productPrice.currentPrice}</strong>
                                     {productPrice.regularPrice && <span className="regular-price">{productPrice.regularPrice}</span>}
                                     {productPrice.isOnSale && <span className="sale-badge">Sale</span>}
                                   </span>

@@ -442,6 +442,11 @@ nav a.active {
   text-decoration: line-through;
 }
 
+.price-unavailable {
+  color: #59665d;
+  font-weight: 650;
+}
+
 .sale-badge {
   background: #fff1ef;
   border-radius: 999px;

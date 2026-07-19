@@ -141,6 +141,17 @@ export async function getFreshKrogerConnection(supabase: SupabaseClient, userId:
   return connection;
 }
 
+function parsePrice(value: unknown) {
+  if (typeof value === 'number') {
+    return value;
+  }
+  if (typeof value === 'string' && value.trim()) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+}
+
 export function mapKrogerProduct(product: Record<string, unknown>): KrogerProduct {
   const items = Array.isArray(product.items) ? product.items as Record<string, unknown>[] : [];
   const firstItem = items[0] ?? {};
@@ -149,8 +160,8 @@ export function mapKrogerProduct(product: Record<string, unknown>): KrogerProduc
   const sizes = Array.isArray(firstImage?.sizes) ? firstImage.sizes as Record<string, unknown>[] : [];
   const firstSize = sizes[0];
   const price = firstItem.price as Record<string, unknown> | undefined;
-  const regularPrice = typeof price?.regular === 'number' ? price.regular : null;
-  const promoPrice = typeof price?.promo === 'number' ? price.promo : null;
+  const regularPrice = parsePrice(price?.regular);
+  const promoPrice = parsePrice(price?.promo);
   const isOnSale = regularPrice !== null && promoPrice !== null && promoPrice < regularPrice;
 
   return {
