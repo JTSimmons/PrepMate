@@ -791,9 +791,6 @@ function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
       {expanded && (
         <div className="form-stack">
           <div className="row-actions">
-            <button type="button" className="primary" onClick={submitApproved} disabled={!connected || approvedCount === 0 || loading}>
-              Add approved ({approvedCount})
-            </button>
             <button
               type="button"
               className="icon-button"
@@ -967,6 +964,13 @@ function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
                   </article>
                 );
               })}
+            </div>
+          )}
+          {items.length > 0 && (
+            <div className="row-actions">
+              <button type="button" className="primary" onClick={submitApproved} disabled={!connected || approvedCount === 0 || loading}>
+                Add approved ({approvedCount})
+              </button>
             </div>
           )}
           <form className="manual-form add-cart-item-form" onSubmit={addManual}>
