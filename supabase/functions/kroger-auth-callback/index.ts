@@ -1,5 +1,4 @@
 import { exchangeCodeForToken } from '../_shared/kroger.ts';
-import { htmlResponse } from '../_shared/http.ts';
 import { serviceClient } from '../_shared/supabase.ts';
 
 Deno.serve(async (request) => {
@@ -9,10 +8,10 @@ Deno.serve(async (request) => {
   const error = url.searchParams.get('error');
 
   if (error) {
-    return htmlResponse(closePage(`Kroger authorization failed: ${error}`), 400);
+    return redirectToApp(null, 'error', `Kroger authorization failed: ${error}`);
   }
   if (!code || !state) {
-    return htmlResponse(closePage('Kroger authorization is missing required parameters.'), 400);
+    return redirectToApp(null, 'error', 'Kroger authorization is missing required parameters.');
   }
 
   try {
@@ -38,24 +37,45 @@ Deno.serve(async (request) => {
     if (upsertError) throw new Error(upsertError.message);
 
     await supabase.rpc('kroger_delete_oauth_state', { state_value: state });
-    return htmlResponse(closePage('Kroger is connected. You can close this tab and return to PrepMate.'));
+    return redirectToApp(stateRow.redirect_to, 'connected');
   } catch (caught) {
-    return htmlResponse(closePage(caught instanceof Error ? caught.message : 'Kroger authorization failed.'), 400);
+    return redirectToApp(null, 'error', caught instanceof Error ? caught.message : 'Kroger authorization failed.');
   }
 });
 
-function closePage(message: string) {
-  return `<!doctype html>
-<html lang="en">
-  <head><meta charset="utf-8"><title>PrepMate Kroger</title></head>
-  <body style="font-family: system-ui, sans-serif; padding: 2rem;">
-    <h1>PrepMate</h1>
-    <p>${escapeHtml(message)}</p>
-    <script>if (window.opener) window.opener.postMessage({ type: 'prepmate:kroger-connected' }, '*');</script>
-  </body>
-</html>`;
+function redirectToApp(redirectTo: string | null, status: 'connected' | 'error', message?: string) {
+  const target = safeRedirectUrl(redirectTo);
+  target.searchParams.set('kroger', status);
+  if (message) {
+    target.searchParams.set('kroger_message', message);
+  }
+
+  return new Response(null, {
+    status: 303,
+    headers: {
+      Location: target.toString(),
+      'Cache-Control': 'no-store',
+    },
+  });
 }
 
-function escapeHtml(value: string) {
-  return value.replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char] ?? char);
+function safeRedirectUrl(redirectTo: string | null) {
+  const fallback = new URL('https://jtsimmons.github.io/PrepMate/#/grocery-list');
+  if (!redirectTo) {
+    return fallback;
+  }
+
+  try {
+    const parsed = new URL(redirectTo);
+    if (parsed.origin === 'https://jtsimmons.github.io' && parsed.pathname.startsWith('/PrepMate')) {
+      return parsed;
+    }
+    if (parsed.origin === 'http://localhost:5173') {
+      return parsed;
+    }
+  } catch {
+    return fallback;
+  }
+
+  return fallback;
 }

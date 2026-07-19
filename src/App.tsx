@@ -555,7 +555,7 @@ function GroceryPage({ householdId }: { householdId: string }) {
   const [list, setList] = useState<ShoppingList | null>(null);
   const [items, setItems] = useState<ShoppingListItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState(initialGroceryMessage);
   const [manual, setManual] = useState({ display_name: '', quantity: '', unit: '', category: '', notes: '' });
 
   const refresh = useCallback(async () => {
@@ -661,6 +661,18 @@ function GroceryPage({ householdId }: { householdId: string }) {
   );
 }
 
+function initialGroceryMessage() {
+  const params = new URLSearchParams(window.location.search);
+  const krogerStatus = params.get('kroger');
+  if (krogerStatus === 'connected') {
+    return 'Kroger is connected. Open Kroger cart review and refresh matches.';
+  }
+  if (krogerStatus === 'error') {
+    return params.get('kroger_message') ?? 'Kroger authorization failed.';
+  }
+  return '';
+}
+
 function KrogerCartPanel({ shoppingListId }: { shoppingListId: string }) {
   const [expanded, setExpanded] = useState(false);
   const [connected, setConnected] = useState(false);
@@ -700,8 +712,7 @@ function KrogerCartPanel({ shoppingListId }: { shoppingListId: string }) {
     setMessage('');
     try {
       const authorizationUrl = await startKrogerAuth();
-      window.open(authorizationUrl, '_blank', 'noopener,noreferrer');
-      setMessage('Finish Kroger authorization in the new tab, then refresh this review.');
+      window.location.assign(authorizationUrl);
     } catch (caught) {
       setMessage((caught as Error).message);
     }
