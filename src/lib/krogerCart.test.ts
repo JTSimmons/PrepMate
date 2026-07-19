@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { activeKrogerMatch, cartSearchTerm, isApprovedForKroger, isKrogerEligibleItem, krogerStatusLabel } from './krogerCart';
+import { activeKrogerMatch, cartSearchTerm, isApprovedForKroger, isKrogerEligibleItem, isKrogerReviewComplete, krogerStatusLabel } from './krogerCart';
 import type { KrogerPreviewItem, ShoppingListKrogerMatch } from './types';
 
 const baseMatch: ShoppingListKrogerMatch = {
@@ -45,5 +45,13 @@ describe('Kroger cart helpers', () => {
     expect(activeKrogerMatch(item)).toEqual(baseMatch);
     expect(krogerStatusLabel(baseMatch)).toBe('Approved');
     expect(krogerStatusLabel(null)).toBe('Needs review');
+  });
+
+  it('treats approved, skipped, and added items as complete in review queue', () => {
+    expect(isKrogerReviewComplete(baseMatch)).toBe(true);
+    expect(isKrogerReviewComplete({ ...baseMatch, status: 'skipped', kroger_product_upc: null })).toBe(true);
+    expect(isKrogerReviewComplete({ ...baseMatch, status: 'added' })).toBe(true);
+    expect(isKrogerReviewComplete({ ...baseMatch, status: 'failed' })).toBe(false);
+    expect(isKrogerReviewComplete(null)).toBe(false);
   });
 });

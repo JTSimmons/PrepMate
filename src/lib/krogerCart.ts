@@ -16,6 +16,10 @@ export function isApprovedForKroger(match: ShoppingListKrogerMatch | null) {
   return Boolean(match?.kroger_product_upc && match.status === 'approved' && match.package_quantity > 0);
 }
 
+export function isKrogerReviewComplete(match: ShoppingListKrogerMatch | null) {
+  return Boolean(match && ['approved', 'skipped', 'added'].includes(match.status));
+}
+
 export function krogerStatusLabel(match: ShoppingListKrogerMatch | null) {
   if (!match) {
     return 'Needs review';

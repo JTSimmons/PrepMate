@@ -20,7 +20,7 @@ import {
   submitKrogerCart,
   updateKrogerMatch,
 } from './lib/kroger';
-import { activeKrogerMatch, cartSearchTerm, isApprovedForKroger, krogerStatusLabel } from './lib/krogerCart';
+import { activeKrogerMatch, cartSearchTerm, isApprovedForKroger, isKrogerReviewComplete, krogerStatusLabel } from './lib/krogerCart';
 import { isSupabaseConfigured, supabase } from './lib/supabase';
 import type {
   Household,
@@ -685,6 +685,9 @@ function KrogerCartPanel({ shoppingListId }: { shoppingListId: string }) {
   const [productsByItem, setProductsByItem] = useState<Record<string, KrogerProduct[]>>({});
 
   const approvedCount = items.filter((item) => isApprovedForKroger(activeKrogerMatch(item))).length;
+  const pendingItems = items.filter((item) => !isKrogerReviewComplete(activeKrogerMatch(item)));
+  const reviewedItems = items.filter((item) => isKrogerReviewComplete(activeKrogerMatch(item)));
+  const activeItem = pendingItems[0] ?? null;
 
   const loadPreview = useCallback(async () => {
     setLoading(true);
@@ -741,6 +744,11 @@ function KrogerCartPanel({ shoppingListId }: { shoppingListId: string }) {
       allow_substitutes: activeKrogerMatch(item)?.allow_substitutes ?? true,
     });
     setItems((current) => current.map((currentItem) => (currentItem.id === item.id ? { ...currentItem, shopping_list_kroger_matches: [match] } : currentItem)));
+    setProductsByItem((current) => {
+      const next = { ...current };
+      delete next[item.id];
+      return next;
+    });
   }
 
   async function patchMatch(item: KrogerPreviewItem, patch: Parameters<typeof updateKrogerMatch>[1]) {
@@ -755,6 +763,11 @@ function KrogerCartPanel({ shoppingListId }: { shoppingListId: string }) {
   async function skipItem(item: KrogerPreviewItem) {
     const match = await saveKrogerMatch(item.id, null, { status: 'skipped', package_quantity: 1, allow_substitutes: true });
     setItems((current) => current.map((currentItem) => (currentItem.id === item.id ? { ...currentItem, shopping_list_kroger_matches: [match] } : currentItem)));
+    setProductsByItem((current) => {
+      const next = { ...current };
+      delete next[item.id];
+      return next;
+    });
   }
 
   async function submitApproved() {
@@ -808,9 +821,11 @@ function KrogerCartPanel({ shoppingListId }: { shoppingListId: string }) {
           {!connected && <p className="message">Connect Kroger before searching products or adding items to cart.</p>}
           {items.length === 0 ? (
             <section className="empty-state">No eligible grocery items to send to Kroger.</section>
+          ) : !activeItem ? (
+            <section className="empty-state">All Kroger items are reviewed. Add approved items when ready.</section>
           ) : (
             <div className="kroger-review-list">
-              {items.map((item) => {
+              {[activeItem].map((item) => {
                 const match = activeKrogerMatch(item);
                 const products = productsByItem[item.id] ?? [];
                 return (
@@ -818,6 +833,7 @@ function KrogerCartPanel({ shoppingListId }: { shoppingListId: string }) {
                     <div>
                       <strong>{item.display_name}</strong>
                       <p>{[item.quantity, item.unit].filter(Boolean).join(' ')} {item.notes ? `· ${item.notes}` : ''}</p>
+                      <p>{pendingItems.length} item{pendingItems.length === 1 ? '' : 's'} left to review</p>
                       <span className={`status-pill status-${match?.status ?? 'pending'}`}>{krogerStatusLabel(match)}</span>
                       {match?.last_error && <p className="message error">{match.last_error}</p>}
                     </div>
@@ -884,6 +900,22 @@ function KrogerCartPanel({ shoppingListId }: { shoppingListId: string }) {
                 );
               })}
             </div>
+          )}
+          {reviewedItems.length > 0 && (
+            <details className="reviewed-summary">
+              <summary>Reviewed items ({reviewedItems.length})</summary>
+              <ul className="list">
+                {reviewedItems.map((item) => {
+                  const match = activeKrogerMatch(item);
+                  return (
+                    <li key={item.id}>
+                      <span>{item.display_name}</span>
+                      <span>{krogerStatusLabel(match)}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </details>
           )}
         </div>
       )}
