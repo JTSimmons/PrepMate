@@ -126,7 +126,7 @@ export async function saveMeal(householdId: string, values: MealFormValues, meal
       ingredient_id: await findOrCreateIngredient(householdId, ingredient),
       quantity: ingredient.quantity,
       unit: null,
-      preparation_note: ingredient.preparation_note.trim() || null,
+      preparation_note: null,
       is_optional: ingredient.is_optional,
     });
   }

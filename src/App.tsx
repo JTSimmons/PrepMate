@@ -38,7 +38,6 @@ import type {
 const emptyIngredient = (): IngredientRowInput => ({
   name: '',
   quantity: null,
-  preparation_note: '',
   is_optional: false,
 });
 
@@ -60,7 +59,6 @@ function mealToForm(meal: Meal): MealFormValues {
         ingredient_id: row.ingredient_id,
         name: row.ingredients?.name ?? '',
         quantity: row.quantity,
-        preparation_note: row.preparation_note ?? '',
         is_optional: row.is_optional,
       })) ?? [emptyIngredient()],
   };
@@ -364,12 +362,6 @@ export function MealForm({
             step="0.01"
             value={ingredient.quantity ?? ''}
             onChange={(event) => updateIngredient(index, { quantity: event.target.value ? Number(event.target.value) : null })}
-          />
-          <input
-            aria-label="Preparation note"
-            placeholder="Prep note"
-            value={ingredient.preparation_note}
-            onChange={(event) => updateIngredient(index, { preparation_note: event.target.value })}
           />
           <label className="check-label">
             <input type="checkbox" checked={ingredient.is_optional} onChange={(event) => updateIngredient(index, { is_optional: event.target.checked })} />

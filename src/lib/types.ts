@@ -9,7 +9,6 @@ export type IngredientRowInput = {
   ingredient_id?: string;
   name: string;
   quantity: number | null;
-  preparation_note: string;
   is_optional: boolean;
 };
 

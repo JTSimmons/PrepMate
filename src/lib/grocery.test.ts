@@ -70,6 +70,14 @@ describe('aggregateGroceryItems', () => {
     expect(items[0].sources[0]).toMatchObject({ mealName: 'Tacos', quantity: 2 });
   });
 
+  it('does not copy ingredient prep notes into grocery item notes', () => {
+    const items = aggregateGroceryItems([
+      selectedMeal('Tacos', [ingredient({ preparation_note: 'diced' })]),
+    ]);
+
+    expect(items[0].notes).toBeNull();
+  });
+
   it('skips optional ingredients and preserves null quantities', () => {
     const items = aggregateGroceryItems([
       selectedMeal('Salad', [

@@ -25,15 +25,11 @@ export function aggregateGroceryItems(selectedMeals: SelectedMeal[]): Aggregated
       const normalizedName = row.ingredients.normalized_name || normalizeIngredientName(row.ingredients.name);
       const key = normalizedName;
       const quantity = scaledQuantity(row.quantity);
-      const note = row.preparation_note?.trim() || null;
       const existing = items.get(key);
 
       if (existing) {
         existing.quantity = existing.quantity === null || quantity === null ? null : existing.quantity + quantity;
         existing.sources.push({ mealId: selected.meal.id, mealName: selected.meal.name, quantity });
-        if (note && !existing.notes?.includes(note)) {
-          existing.notes = existing.notes ? `${existing.notes}; ${note}` : note;
-        }
         continue;
       }
 
@@ -44,7 +40,7 @@ export function aggregateGroceryItems(selectedMeals: SelectedMeal[]): Aggregated
         quantity,
         unit: null,
         category: null,
-        notes: note,
+        notes: null,
         source: 'meal',
         is_checked: false,
         is_removed: false,
