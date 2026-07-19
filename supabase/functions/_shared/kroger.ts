@@ -23,6 +23,12 @@ export type KrogerProduct = {
   isOnSale: boolean;
 };
 
+export type KrogerLocation = {
+  locationId: string;
+  name: string;
+  address: string;
+};
+
 const defaultBaseUrl = 'https://api.kroger.com/v1';
 const defaultAuthBaseUrl = 'https://api.kroger.com/v1/connect/oauth2';
 
@@ -197,6 +203,40 @@ export async function searchProducts(accessToken: string, term: string, location
   }
   const payload = await response.json();
   return Array.isArray(payload.data) ? payload.data.map(mapKrogerProduct).filter((product: KrogerProduct) => product.upc && product.description) : [];
+}
+
+function mapKrogerLocation(location: Record<string, unknown>): KrogerLocation {
+  const address = location.address as Record<string, unknown> | undefined;
+  const line1 = address?.addressLine1 ? String(address.addressLine1) : '';
+  const city = address?.city ? String(address.city) : '';
+  const state = address?.state ? String(address.state) : '';
+  const zipCode = address?.zipCode ? String(address.zipCode) : '';
+
+  return {
+    locationId: String(location.locationId ?? ''),
+    name: location.name ? String(location.name) : 'Kroger',
+    address: [line1, [city, state, zipCode].filter(Boolean).join(' ')].filter(Boolean).join(', '),
+  };
+}
+
+export async function searchLocations(accessToken: string, zipCode: string) {
+  const params = new URLSearchParams({
+    'filter.zipCode.near': zipCode,
+    'filter.radiusInMiles': '15',
+    'filter.limit': '5',
+  });
+
+  const response = await fetch(`${krogerBaseUrl()}/locations?${params.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      Accept: 'application/json',
+    },
+  });
+  if (!response.ok) {
+    throw new Error(`Kroger location search failed: ${await response.text()}`);
+  }
+  const payload = await response.json();
+  return Array.isArray(payload.data) ? payload.data.map(mapKrogerLocation).filter((location: KrogerLocation) => location.locationId) : [];
 }
 
 export async function addToCart(accessToken: string, items: Array<{ upc: string; quantity: number; allowSubstitutes: boolean; specialInstructions?: string | null }>) {

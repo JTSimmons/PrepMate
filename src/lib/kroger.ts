@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import type { KrogerPreviewItem, KrogerProduct, ShoppingListKrogerMatch } from './types';
+import type { KrogerLocation, KrogerPreviewItem, KrogerProduct, ShoppingListKrogerMatch } from './types';
 
 function requireSupabase() {
   if (!supabase) {
@@ -37,6 +37,20 @@ export async function fetchKrogerPreview(shoppingListId: string, includeChecked:
 export async function searchKrogerProducts(term: string, locationId: string | null) {
   const { data, error } = await requireSupabase().functions.invoke<{ connected: boolean; products: KrogerProduct[] }>('kroger-product-search', {
     body: { term, locationId },
+  });
+  return assertInvoke(data, error);
+}
+
+export async function searchKrogerLocations(zipCode: string) {
+  const { data, error } = await requireSupabase().functions.invoke<{ locations: KrogerLocation[] }>('kroger-location', {
+    body: { action: 'search', zipCode },
+  });
+  return assertInvoke(data, error).locations;
+}
+
+export async function selectKrogerLocation(location: KrogerLocation) {
+  const { data, error } = await requireSupabase().functions.invoke<{ preferredLocationId: string; preferredLocationName: string | null }>('kroger-location', {
+    body: { action: 'select', locationId: location.locationId, locationName: location.name },
   });
   return assertInvoke(data, error);
 }

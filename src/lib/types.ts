@@ -137,6 +137,12 @@ export type KrogerProduct = {
   isOnSale: boolean;
 };
 
+export type KrogerLocation = {
+  locationId: string;
+  name: string;
+  address: string;
+};
+
 export type KrogerPreviewItem = ShoppingListItem & {
   shopping_list_kroger_matches?: ShoppingListKrogerMatch[];
 };

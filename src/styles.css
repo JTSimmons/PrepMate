@@ -406,6 +406,40 @@ nav a.active {
   gap: 0.5rem;
 }
 
+.store-picker {
+  border: 1px solid #edf1ea;
+  border-radius: 8px;
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.85rem;
+}
+
+.store-picker p {
+  color: #59665d;
+  margin: 0.2rem 0 0;
+}
+
+.store-search {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: 1fr auto;
+}
+
+.store-results {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.store-results button {
+  display: grid;
+  gap: 0.15rem;
+  text-align: left;
+}
+
+.store-results small {
+  color: #59665d;
+}
+
 .wide-field {
   grid-column: 1 / -1;
 }
