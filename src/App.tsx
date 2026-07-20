@@ -71,12 +71,22 @@ function useSession() {
       setLoading(false);
       return;
     }
+    const client = supabase;
 
-    supabase.auth.getSession().then(({ data }) => {
+    client.auth.getSession().then(async ({ data }) => {
+      if (data.session) {
+        const { error } = await client.auth.getUser();
+        if (error) {
+          await client.auth.signOut({ scope: 'local' });
+          setSession(null);
+          setLoading(false);
+          return;
+        }
+      }
       setSession(data.session);
       setLoading(false);
     });
-    const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => setSession(nextSession));
+    const { data } = client.auth.onAuthStateChange((_event, nextSession) => setSession(nextSession));
     return () => data.subscription.unsubscribe();
   }, []);
 
