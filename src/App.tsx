@@ -14,9 +14,7 @@ import { aggregateGroceryItems } from './lib/grocery';
 import {
   fetchKrogerPreview,
   saveKrogerMatch,
-  searchKrogerLocations,
   searchKrogerProducts,
-  selectKrogerLocation,
   startKrogerAuth,
   submitKrogerCart,
   updateKrogerMatch,
@@ -25,7 +23,6 @@ import { activeKrogerMatch, cartSearchTerm, isApprovedForKroger, isKrogerReviewC
 import { isSupabaseConfigured, supabase } from './lib/supabase';
 import type {
   Household,
-  KrogerLocation,
   IngredientRowInput,
   KrogerPreviewItem,
   KrogerProduct,
@@ -580,11 +577,6 @@ function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [connected, setConnected] = useState(false);
   const [items, setItems] = useState<KrogerPreviewItem[]>([]);
-  const [locationId, setLocationId] = useState('');
-  const [locationName, setLocationName] = useState<string | null>(null);
-  const [zipCode, setZipCode] = useState('');
-  const [locations, setLocations] = useState<KrogerLocation[]>([]);
-  const [searchingLocations, setSearchingLocations] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [searchingItemId, setSearchingItemId] = useState<string | null>(null);
@@ -602,8 +594,6 @@ function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
       const preview = await fetchKrogerPreview(shoppingListId);
       setConnected(preview.connected);
       setItems(preview.items);
-      setLocationId(preview.preferredLocationId ?? '');
-      setLocationName(preview.preferredLocationName);
       setExpandedItemId((current) => current ?? preview.items.find((item) => !isKrogerReviewComplete(activeKrogerMatch(item)))?.id ?? preview.items[0]?.id ?? null);
     } catch (caught) {
       setMessage((caught as Error).message);
@@ -630,13 +620,11 @@ function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
     setSearchingItemId(item.id);
     setMessage('');
     try {
-      const result = await searchKrogerProducts(cartSearchTerm(item), locationId || null);
+      const result = await searchKrogerProducts(cartSearchTerm(item));
       setConnected(result.connected);
       setProductsByItem((current) => ({ ...current, [item.id]: result.products }));
       if (result.products.length === 0) {
         setMessage(`No Kroger products found for ${item.display_name}.`);
-      } else if (!locationId) {
-        setMessage('Select a Kroger store to see location-specific prices.');
       }
     } catch (caught) {
       setMessage((caught as Error).message);
@@ -721,41 +709,6 @@ function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
     }
   }
 
-  async function searchStores(event: React.FormEvent) {
-    event.preventDefault();
-    setSearchingLocations(true);
-    setMessage('');
-    try {
-      const results = await searchKrogerLocations(zipCode);
-      setLocations(results);
-      if (results.length === 0) {
-        setMessage(`No Kroger stores found near ${zipCode}.`);
-      }
-    } catch (caught) {
-      setMessage((caught as Error).message);
-    } finally {
-      setSearchingLocations(false);
-    }
-  }
-
-  async function chooseLocation(location: KrogerLocation) {
-    setLoading(true);
-    setMessage('');
-    try {
-      const selected = await selectKrogerLocation(location);
-      setLocationId(selected.preferredLocationId);
-      setLocationName(selected.preferredLocationName);
-      setLocations([]);
-      setProductsByItem({});
-      setMessage('Kroger store selected. Search products again to load prices for that store.');
-      await loadPreview();
-    } catch (caught) {
-      setMessage((caught as Error).message);
-    } finally {
-      setLoading(false);
-    }
-  }
-
   return (
     <section className="card kroger-panel">
       <div className="panel-heading">
@@ -785,34 +738,6 @@ function KrogerCartPanelReview({ shoppingListId }: { shoppingListId: string }) {
                 <button type="button" onClick={loadPreview} disabled={loading}>
                   {loading ? 'Refreshing...' : 'Refresh review'}
                 </button>
-              </div>
-              <div className="store-picker">
-                <div>
-                  <strong>Kroger store</strong>
-                  <p>{locationId ? [locationName, locationId].filter(Boolean).join(' - ') : 'Select a store to show Kroger prices.'}</p>
-                </div>
-                <form className="store-search" onSubmit={searchStores}>
-                  <input
-                    inputMode="numeric"
-                    maxLength={5}
-                    placeholder="ZIP code"
-                    value={zipCode}
-                    onChange={(event) => setZipCode(event.target.value.replace(/\D/g, '').slice(0, 5))}
-                  />
-                  <button type="submit" disabled={!connected || searchingLocations}>
-                    {searchingLocations ? 'Searching...' : 'Find store'}
-                  </button>
-                </form>
-                {locations.length > 0 && (
-                  <div className="store-results">
-                    {locations.map((location) => (
-                      <button type="button" key={location.locationId} onClick={() => chooseLocation(location)}>
-                        <strong>{location.name}</strong>
-                        <small>{location.address || location.locationId}</small>
-                      </button>
-                    ))}
-                  </div>
-                )}
               </div>
             </div>
           )}

@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import type { KrogerLocation, KrogerPreviewItem, KrogerProduct, ShoppingListKrogerMatch } from './types';
+import type { KrogerPreviewItem, KrogerProduct, ShoppingListKrogerMatch } from './types';
 
 function requireSupabase() {
   if (!supabase) {
@@ -25,8 +25,6 @@ export async function startKrogerAuth() {
 export async function fetchKrogerPreview(shoppingListId: string) {
   const { data, error } = await requireSupabase().functions.invoke<{
     connected: boolean;
-    preferredLocationId: string | null;
-    preferredLocationName: string | null;
     items: KrogerPreviewItem[];
   }>('kroger-cart-preview', {
     body: { shoppingListId },
@@ -34,23 +32,9 @@ export async function fetchKrogerPreview(shoppingListId: string) {
   return assertInvoke(data, error);
 }
 
-export async function searchKrogerProducts(term: string, locationId: string | null) {
+export async function searchKrogerProducts(term: string) {
   const { data, error } = await requireSupabase().functions.invoke<{ connected: boolean; products: KrogerProduct[] }>('kroger-product-search', {
-    body: { term, locationId },
-  });
-  return assertInvoke(data, error);
-}
-
-export async function searchKrogerLocations(zipCode: string) {
-  const { data, error } = await requireSupabase().functions.invoke<{ locations: KrogerLocation[] }>('kroger-location', {
-    body: { action: 'search', zipCode },
-  });
-  return assertInvoke(data, error).locations;
-}
-
-export async function selectKrogerLocation(location: KrogerLocation) {
-  const { data, error } = await requireSupabase().functions.invoke<{ preferredLocationId: string; preferredLocationName: string | null }>('kroger-location', {
-    body: { action: 'select', locationId: location.locationId, locationName: location.name },
+    body: { term },
   });
   return assertInvoke(data, error);
 }

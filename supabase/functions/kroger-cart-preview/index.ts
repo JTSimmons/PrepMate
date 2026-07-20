@@ -43,8 +43,8 @@ Deno.serve(async (request) => {
 
     return jsonResponse({
       connected: Boolean(connection),
-      preferredLocationId: connection?.preferred_location_id ?? Deno.env.get('KROGER_DEFAULT_LOCATION_ID') ?? null,
-      preferredLocationName: connection?.preferred_location_name ?? null,
+      preferredLocationId: Deno.env.get('KROGER_DEFAULT_LOCATION_ID') ?? connection?.preferred_location_id ?? null,
+      preferredLocationName: Deno.env.get('KROGER_DEFAULT_LOCATION_NAME') ?? connection?.preferred_location_name ?? null,
       items: itemsWithMatches,
     });
   } catch (error) {

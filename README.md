@@ -87,8 +87,11 @@ https://your-project-ref.supabase.co/functions/v1/kroger-auth-callback
 supabase secrets set KROGER_CLIENT_ID=your-kroger-client-id
 supabase secrets set KROGER_CLIENT_SECRET=your-kroger-client-secret
 supabase secrets set KROGER_REDIRECT_URI=https://your-project-ref.supabase.co/functions/v1/kroger-auth-callback
-supabase secrets set KROGER_DEFAULT_LOCATION_ID=optional-store-location-id
+supabase secrets set KROGER_DEFAULT_LOCATION_ID=03500557
+supabase secrets set KROGER_DEFAULT_LOCATION_NAME="Kroger - Shiloh Springs"
 ```
+
+`KROGER_DEFAULT_LOCATION_ID` is used for product search pricing. The shopper does not select a store in the app.
 
 3. Deploy the Edge Functions:
 

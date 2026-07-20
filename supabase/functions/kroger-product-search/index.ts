@@ -20,7 +20,8 @@ Deno.serve(async (request) => {
       return jsonResponse({ connected: false, products: [] });
     }
 
-    const products = await searchProducts(connection.access_token, term, locationId ?? connection.preferred_location_id);
+    const configuredLocationId = Deno.env.get('KROGER_DEFAULT_LOCATION_ID') ?? null;
+    const products = await searchProducts(connection.access_token, term, configuredLocationId ?? locationId ?? connection.preferred_location_id);
     return jsonResponse({ connected: true, products });
   } catch (error) {
     return jsonResponse({ error: error instanceof Error ? error.message : 'Kroger product search failed.' }, 400);
