@@ -42,4 +42,17 @@ describe('MealForm', () => {
       ]),
     }));
   });
+
+  it('defaults blank ingredient quantities to one', async () => {
+    const onSave = vi.fn();
+    render(<MealForm initialValues={initialValues} onSave={onSave} onCancel={vi.fn()} />);
+
+    await userEvent.type(screen.getByLabelText('Meal name'), 'Soup');
+    await userEvent.type(screen.getByLabelText('Ingredient name'), 'Carrots');
+    await userEvent.click(screen.getByRole('button', { name: /save meal/i }));
+
+    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({
+      ingredients: [expect.objectContaining({ name: 'Carrots', quantity: 1 })],
+    }));
+  });
 });

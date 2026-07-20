@@ -313,7 +313,9 @@ export function MealForm({
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     setError('');
-    const validIngredients = values.ingredients.filter((row) => row.name.trim());
+    const validIngredients = values.ingredients
+      .filter((row) => row.name.trim())
+      .map((row) => ({ ...row, quantity: row.quantity ?? 1 }));
     if (!values.name.trim()) {
       setError('Meal name is required.');
       return;
