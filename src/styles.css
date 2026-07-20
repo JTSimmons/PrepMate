@@ -289,6 +289,16 @@ nav a.active {
   gap: 0.5rem;
 }
 
+.ingredient-row {
+  border-bottom: 1px solid #edf1ea;
+  padding-bottom: 0.85rem;
+}
+
+.ingredient-row:last-of-type {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
 .check-label {
   align-items: center;
   display: flex;
@@ -569,7 +579,7 @@ nav a.active {
   }
 
   .ingredient-row {
-    grid-template-columns: 1.3fr 0.5fr 0.6fr 0.8fr 1fr auto auto;
+    grid-template-columns: minmax(0, 1fr) 120px auto;
   }
 
   .shopping-item {
